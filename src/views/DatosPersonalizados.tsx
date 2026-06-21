@@ -15,7 +15,7 @@ const SAMPLE_CAMPOS: CampoPersonalizado[] = [
   { id: '1', etiqueta: 'Club', tipo: 'texto', valor: 'Toastmasters Club 1234' },
   { id: '2', etiqueta: 'Fecha de reunión', tipo: 'texto', valor: new Date().toLocaleDateString('es-ES') },
   { id: '3', etiqueta: 'Número de reunión', tipo: 'numero', valor: '42' },
-  { id: '4', etiqueta: 'Reunión híbrida', tipo: 'si-no', valor: 'true' },
+  { id: '4', etiqueta: 'Modalidad', tipo: 'lista', valor: 'Presencial', opciones: ['Presencial', 'Virtual', 'Híbrida'] },
   { id: '5', etiqueta: 'Tema de la reunión', tipo: 'texto', valor: 'Superando obstáculos' },
 ]
 
