@@ -7,6 +7,7 @@ interface CardProps {
   subtitle?: string
   action?: React.ReactNode
   padding?: 'none' | 'sm' | 'md' | 'lg'
+  accentColor?: string
 }
 
 const paddingClasses = {
@@ -16,9 +17,12 @@ const paddingClasses = {
   lg: 'p-6',
 }
 
-export function Card({ children, className = '', title, subtitle, action, padding = 'md' }: CardProps) {
+export function Card({ children, className = '', title, subtitle, action, padding = 'md', accentColor }: CardProps) {
   return (
-    <div className={`bg-white rounded-xl border border-slate-200 shadow-sm ${className}`}>
+    <div
+      className={`bg-white rounded-xl border border-slate-200 shadow-sm ${className}`}
+      style={accentColor ? { borderLeft: `4px solid ${accentColor}` } : undefined}
+    >
       {(title || action) && (
         <div className="flex items-start justify-between px-5 pt-5 pb-4 border-b border-slate-100">
           <div>

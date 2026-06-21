@@ -133,6 +133,7 @@ export default function EvaluadorGeneral() {
           <Card
             title={t('evalChecklistTitle')}
             subtitle={`${completedCount} / ${totalCount} ${t('evalCompleted')}`}
+            accentColor="#f59e0b"
             action={
               <button onClick={resetChecklist} className="text-slate-400 hover:text-amber-500 transition-colors p-1">
                 <RotateCcw size={14} />
@@ -222,7 +223,7 @@ export default function EvaluadorGeneral() {
             </button>
           </div>
 
-          <Card title={t('evalFinalSummary')}>
+          <Card title={t('evalFinalSummary')} accentColor="#f59e0b">
             <Textarea
               value={data.resumenFinal}
               onChange={(e) => setData((prev) => ({ ...prev, resumenFinal: e.target.value }))}

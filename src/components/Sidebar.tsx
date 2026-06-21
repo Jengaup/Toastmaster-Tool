@@ -8,16 +8,17 @@ interface NavItem {
   path: string
   labelKey: TKey
   icon: React.ReactNode
+  activeBg: string
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { path: '/temporizador', labelKey: 'navTimer', icon: <Timer size={18} /> },
-  { path: '/reporte', labelKey: 'navReport', icon: <ClipboardList size={18} /> },
-  { path: '/ah-counter', labelKey: 'navAhCounter', icon: <MessageSquare size={18} /> },
-  { path: '/gramatical', labelKey: 'navGrammar', icon: <BookOpen size={18} /> },
-  { path: '/evaluador', labelKey: 'navEvaluator', icon: <Star size={18} /> },
-  { path: '/personalizado', labelKey: 'navCustom', icon: <Settings size={18} /> },
-  { path: '/imprimir', labelKey: 'navPrint', icon: <Printer size={18} /> },
+  { path: '/temporizador', labelKey: 'navTimer',     icon: <Timer size={18} />,        activeBg: 'bg-emerald-600' },
+  { path: '/reporte',      labelKey: 'navReport',    icon: <ClipboardList size={18} />, activeBg: 'bg-sky-600'    },
+  { path: '/ah-counter',   labelKey: 'navAhCounter', icon: <MessageSquare size={18} />, activeBg: 'bg-orange-500' },
+  { path: '/gramatical',   labelKey: 'navGrammar',   icon: <BookOpen size={18} />,      activeBg: 'bg-violet-600' },
+  { path: '/evaluador',    labelKey: 'navEvaluator', icon: <Star size={18} />,          activeBg: 'bg-amber-500'  },
+  { path: '/personalizado',labelKey: 'navCustom',    icon: <Settings size={18} />,      activeBg: 'bg-slate-500'  },
+  { path: '/imprimir',     labelKey: 'navPrint',     icon: <Printer size={18} />,       activeBg: 'bg-indigo-600' },
 ]
 
 interface SidebarProps {
@@ -71,7 +72,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 onClick={onClose}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 group ${
                   isActive
-                    ? 'bg-indigo-600 text-white'
+                    ? `${item.activeBg} text-white`
                     : 'text-slate-400 hover:text-white hover:bg-slate-800'
                 }`}
               >

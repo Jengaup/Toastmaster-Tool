@@ -158,7 +158,7 @@ export default function AhCounter() {
       ) : (
         <div className="space-y-4">
           {participants.map((p) => (
-            <div key={p.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div key={p.id} className="bg-white rounded-xl border border-slate-200 border-l-4 border-l-orange-400 shadow-sm overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shrink-0">
@@ -199,24 +199,24 @@ export default function AhCounter() {
                 {activeWords.length === 0 ? (
                   <p className="text-xs text-slate-400 text-center py-2">{t('ahAddWordsAbove')}</p>
                 ) : (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-3">
                     {activeWords.map((word) => {
                       const count = p.muletillas[word] || 0
                       return (
-                        <div key={word} className="flex items-center rounded-lg border border-slate-200 overflow-hidden">
+                        <div key={word} className="flex items-center rounded-xl border border-slate-200 overflow-hidden shadow-sm">
                           <button
                             onClick={() => decrement(p.id, word)}
                             disabled={count === 0}
-                            className="px-2 py-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border-r border-slate-200"
+                            className="px-3 py-3.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border-r border-slate-200"
                           >
-                            <span className="text-xs font-bold">−</span>
+                            <span className="text-sm font-bold leading-none">−</span>
                           </button>
                           <button
                             onClick={() => increment(p.id, word)}
-                            className="px-3 py-2 flex items-center gap-2 hover:bg-red-50 transition-colors group"
+                            className="px-4 py-3.5 flex items-center gap-3 hover:bg-red-50 active:bg-red-100 transition-colors group"
                           >
-                            <span className="text-sm text-slate-700 group-hover:text-red-600 font-medium">{word}</span>
-                            <span className={`text-sm font-bold font-mono min-w-[1.2rem] text-center ${count > 0 ? 'text-red-500' : 'text-slate-300'}`}>
+                            <span className="text-base text-slate-700 group-hover:text-red-600 font-medium leading-none">{word}</span>
+                            <span className={`text-lg font-bold font-mono min-w-[1.5rem] text-center leading-none ${count > 0 ? 'text-red-500' : 'text-slate-300'}`}>
                               {count}
                             </span>
                           </button>

@@ -132,7 +132,7 @@ export default function Gramatical() {
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-1 space-y-4">
           {/* Palabra del día */}
-          <Card>
+          <Card accentColor="#7c3aed">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-7 h-7 bg-indigo-100 rounded-lg flex items-center justify-center">
                 <BookOpen size={14} className="text-indigo-600" />
@@ -173,7 +173,7 @@ export default function Gramatical() {
           </Card>
 
           {/* Usos de la palabra del día */}
-          <Card>
+          <Card accentColor="#7c3aed">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-slate-900 text-sm">{t('gramUsesOf')} "{data.palabraDelDia}"</h3>
               {totalUsos > 0 && <Badge variant="info">{totalUsos} {t('gramUsesTotal')}</Badge>}

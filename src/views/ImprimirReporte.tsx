@@ -37,6 +37,9 @@ export default function ImprimirReporte() {
   const [campos] = useLocalStorage<CampoPersonalizado[]>(STORAGE_KEYS.CAMPOS_PERSONALIZADOS, [])
   const [copied, setCopied] = useState(false)
 
+  const clubName = campos.find(c => c.etiqueta.toLowerCase().includes('club'))?.valor
+  const meetingDate = campos.find(c => c.etiqueta.toLowerCase().includes('fecha'))?.valor
+
   const segTitle = (seg: { id: string; titulo: string }) =>
     SEG_KEYS[seg.id] ? t(SEG_KEYS[seg.id] as TKey) : seg.titulo
 
@@ -130,7 +133,10 @@ export default function ImprimirReporte() {
       <div className="print:hidden mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">{t('printTitle')}</h1>
-          <p className="text-slate-500 text-sm mt-1">{t('printSubtitle')}</p>
+          <p className="text-slate-500 text-sm mt-1">
+            {clubName ? <span className="font-semibold text-indigo-600">{clubName} · </span> : null}
+            {t('printSubtitle')}
+          </p>
         </div>
         <div className="flex gap-2 shrink-0">
           <Button
@@ -157,8 +163,9 @@ export default function ImprimirReporte() {
 
         {/* Print header — only visible on print */}
         <div className="hidden print:block mb-6 pb-4 border-b-2 border-slate-800">
-          <div className="text-xl font-bold text-slate-900">TM Meeting Assistant</div>
-          <div className="text-sm text-slate-500 mt-1">{t('printTitle')} — {new Date().toLocaleDateString()}</div>
+          <div className="text-xl font-bold text-slate-900">{clubName || 'TM Meeting Assistant'}</div>
+          {clubName && <div className="text-xs text-slate-400 mt-0.5">TM Meeting Assistant</div>}
+          <div className="text-sm text-slate-500 mt-1">{t('printTitle')} — {meetingDate || new Date().toLocaleDateString()}</div>
         </div>
 
         {/* Times */}
@@ -360,7 +367,7 @@ export default function ImprimirReporte() {
 
       {/* Print footer */}
       <div className="hidden print:block mt-8 pt-4 border-t border-slate-300 text-xs text-slate-400 text-center">
-        TM Meeting Assistant · {new Date().toLocaleDateString()}
+        {clubName ? `${clubName} · ` : ''}TM Meeting Assistant · {meetingDate || new Date().toLocaleDateString()}
       </div>
     </div>
   )

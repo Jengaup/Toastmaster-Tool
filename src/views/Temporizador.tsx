@@ -172,7 +172,8 @@ export default function Temporizador() {
               </div>
             )}
             <div
-              className="mt-2 text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full"
+              key={phase}
+              className="phase-pop mt-2 text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full"
               style={{
                 backgroundColor: phase === 'neutral' ? '#f1f5f9' : `${color}22`,
                 color: phase === 'neutral' ? '#94a3b8' : color,
