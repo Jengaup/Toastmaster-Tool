@@ -10,7 +10,13 @@ import { Badge } from '../components/ui/Badge'
 
 function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
-const DEFAULT_WORDS = ['Eh', 'Mm', 'Este', 'O sea', 'Básicamente', 'Entonces', '¿Verdad?']
+const DEFAULT_WORDS = [
+  'Eh...', 'Este...', 'Em...', 'Ehhh...', 'Mmm...',
+  '¿Verdad?', '¿Ok?', '¿Sí?', 'O sea...', 'Bueno...',
+  'Pues...', 'Entonces...', 'Digamos...', 'Básicamente...',
+  'Prácticamente...', 'Literalmente...', '¿Me entienden?',
+  '¿No?', '¿Correcto?', '¿Verdad que sí?',
+]
 
 export default function AhCounter() {
   const { t } = useLanguage()
