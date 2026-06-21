@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus, Trash2, Check, RotateCcw, Copy } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useLanguage } from '../contexts/LanguageContext'
+import { TKey } from '../i18n'
 import { EvaluadorData, EvalSegmento, EvalChecklist } from '../types'
 import { STORAGE_KEYS } from '../utils/storage'
 import { copyToClipboard } from '../utils/export'
@@ -12,30 +13,40 @@ import { Card } from '../components/ui/Card'
 function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
 const DEFAULT_SEGMENTOS: EvalSegmento[] = [
-  { id: 's1', titulo: 'Apertura de la reunión', notas: '' },
-  { id: 's2', titulo: 'Palabra del día', notas: '' },
-  { id: 's3', titulo: 'Discursos preparados', notas: '' },
-  { id: 's4', titulo: 'Table Topics', notas: '' },
-  { id: 's5', titulo: 'Evaluaciones', notas: '' },
-  { id: 's6', titulo: 'Reportes de roles', notas: '' },
-  { id: 's7', titulo: 'Cierre de la reunión', notas: '' },
+  { id: 's1', titulo: '', notas: '' },
+  { id: 's2', titulo: '', notas: '' },
+  { id: 's3', titulo: '', notas: '' },
+  { id: 's4', titulo: '', notas: '' },
+  { id: 's5', titulo: '', notas: '' },
+  { id: 's6', titulo: '', notas: '' },
+  { id: 's7', titulo: '', notas: '' },
 ]
 
 const DEFAULT_CHECKLIST: EvalChecklist[] = [
-  { id: 'c1', texto: 'La reunión inició a tiempo', completado: false },
-  { id: 'c2', texto: 'El Toastmaster del día guió correctamente', completado: false },
-  { id: 'c3', texto: 'Los roles estaban bien asignados', completado: false },
-  { id: 'c4', texto: 'Los discursos cumplieron sus objetivos', completado: false },
-  { id: 'c5', texto: 'Table Topics fue dinámico y participativo', completado: false },
-  { id: 'c6', texto: 'Las evaluaciones fueron constructivas', completado: false },
-  { id: 'c7', texto: 'La reunión terminó en el tiempo previsto', completado: false },
-  { id: 'c8', texto: 'El ambiente fue positivo y motivador', completado: false },
+  { id: 'c1', texto: '', completado: false },
+  { id: 'c2', texto: '', completado: false },
+  { id: 'c3', texto: '', completado: false },
+  { id: 'c4', texto: '', completado: false },
+  { id: 'c5', texto: '', completado: false },
+  { id: 'c6', texto: '', completado: false },
+  { id: 'c7', texto: '', completado: false },
+  { id: 'c8', texto: '', completado: false },
 ]
 
 const DEFAULT_DATA: EvaluadorData = {
   segmentos: DEFAULT_SEGMENTOS,
   checklist: DEFAULT_CHECKLIST,
   resumenFinal: '',
+}
+
+const SEG_KEYS: Record<string, TKey> = {
+  s1: 'evalSeg1', s2: 'evalSeg2', s3: 'evalSeg3', s4: 'evalSeg4',
+  s5: 'evalSeg5', s6: 'evalSeg6', s7: 'evalSeg7',
+}
+
+const CHECK_KEYS: Record<string, TKey> = {
+  c1: 'evalCheck1', c2: 'evalCheck2', c3: 'evalCheck3', c4: 'evalCheck4',
+  c5: 'evalCheck5', c6: 'evalCheck6', c7: 'evalCheck7', c8: 'evalCheck8',
 }
 
 export default function EvaluadorGeneral() {
@@ -82,13 +93,16 @@ export default function EvaluadorGeneral() {
     setData((prev) => ({ ...prev, checklist: prev.checklist.map((c) => ({ ...c, completado: false })) }))
   }
 
+  const segTitle = (seg: EvalSegmento) => SEG_KEYS[seg.id] ? t(SEG_KEYS[seg.id]) : seg.titulo
+  const checkText = (item: EvalChecklist) => CHECK_KEYS[item.id] ? t(CHECK_KEYS[item.id]) : item.texto
+
   const buildSummary = () => {
     const date = new Date().toLocaleDateString('es-ES')
     const checkOk = data.checklist.filter((c) => c.completado).length
     const checkTotal = data.checklist.length
     const segments = data.segmentos
       .filter((s) => s.notas.trim())
-      .map((s) => `**${s.titulo}**\n${s.notas}`)
+      .map((s) => `**${segTitle(s)}**\n${s.notas}`)
       .join('\n\n')
     return `${t('evalSummaryHeader')} — ${date}\n${t('evalSummaryChecklist')}: ${checkOk}/${checkTotal} ✓\n\n${segments}${data.resumenFinal ? `\n\n${t('evalSummaryFinal')}:\n${data.resumenFinal}` : ''}`
   }
@@ -144,7 +158,7 @@ export default function EvaluadorGeneral() {
                     {item.completado && <Check size={10} className="text-white" strokeWidth={3} />}
                   </button>
                   <span className={`text-sm flex-1 leading-tight ${item.completado ? 'line-through text-slate-400' : 'text-slate-700'}`}>
-                    {item.texto}
+                    {checkText(item)}
                   </span>
                   <button
                     onClick={() => removeCheck(item.id)}
@@ -175,7 +189,7 @@ export default function EvaluadorGeneral() {
           {data.segmentos.map((seg) => (
             <div key={seg.id} className="bg-white rounded-xl border border-slate-200 shadow-sm">
               <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
-                <h3 className="font-semibold text-slate-900 text-sm">{seg.titulo}</h3>
+                <h3 className="font-semibold text-slate-900 text-sm">{segTitle(seg)}</h3>
                 <button onClick={() => removeSegmento(seg.id)} className="text-slate-300 hover:text-red-400 transition-colors p-1">
                   <Trash2 size={14} />
                 </button>
