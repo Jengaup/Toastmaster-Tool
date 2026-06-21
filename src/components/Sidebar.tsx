@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Timer, ClipboardList, MessageSquare, BookOpen, Star, Settings, X, Mic, Printer, Lock, Trash2 } from 'lucide-react'
+import { Timer, ClipboardList, MessageSquare, BookOpen, Star, Settings, X, Mic, Printer, Lock, Trash2, RotateCcw } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { TKey } from '../i18n'
 import { hasPinEnabled, savePin, removePin, lockApp } from '../utils/pin'
+import { storageClear, STORAGE_KEYS } from '../utils/storage'
 
 interface NavItem {
   path: string
@@ -36,6 +37,15 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const [pinMsg, setPinMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
   const hasPin = hasPinEnabled()
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+
+  const handleClearSession = () => {
+    storageClear(STORAGE_KEYS.TIMER_RECORDS)
+    storageClear(STORAGE_KEYS.AH_PARTICIPANTS)
+    storageClear(STORAGE_KEYS.GRAMMAR_DATA)
+    storageClear(STORAGE_KEYS.EVALUADOR_DATA)
+    window.location.reload()
+  }
 
   const closePinForm = () => {
     setShowPinForm(false)
@@ -112,6 +122,36 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </nav>
 
         <div className="px-4 py-4 border-t border-slate-700/50 space-y-2">
+          {/* Nueva sesión */}
+          {showClearConfirm ? (
+            <div className="rounded-lg bg-red-950/60 border border-red-800/50 p-3 space-y-2">
+              <p className="text-xs font-semibold text-red-300">{t('newSessionConfirm')}</p>
+              <p className="text-xs text-red-400/80">{t('newSessionHint')}</p>
+              <div className="flex gap-1.5 pt-1">
+                <button
+                  onClick={handleClearSession}
+                  className="flex-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded-lg px-3 py-1.5 transition-colors font-medium"
+                >
+                  {t('newSessionYes')}
+                </button>
+                <button
+                  onClick={() => setShowClearConfirm(false)}
+                  className="px-3 py-1.5 text-xs text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                >
+                  {t('newSessionNo')}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-slate-700/50 text-slate-500 hover:text-red-400 hover:border-red-800/50 hover:bg-red-950/30 transition-all text-xs font-medium"
+            >
+              <RotateCcw size={12} />
+              {t('newSession')}
+            </button>
+          )}
+
           <button
             onClick={toggleLang}
             className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all text-sm font-medium"

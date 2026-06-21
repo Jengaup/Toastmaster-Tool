@@ -205,6 +205,13 @@ const translations = {
     printShortcuts: 'Atajos de teclado',
     timerShortcutHint: '⎵ Iniciar / Pausar   ·   R Reiniciar',
 
+    // New session
+    newSession: 'Nueva sesión',
+    newSessionConfirm: '¿Borrar datos de la reunión?',
+    newSessionYes: 'Sí, borrar todo',
+    newSessionNo: 'Cancelar',
+    newSessionHint: 'Se conservan tu configuración, palabras y campos personalizados.',
+
     // PIN lock
     pinLocked: 'Sesión bloqueada',
     pinUnlock: 'Desbloquear',
@@ -423,6 +430,13 @@ const translations = {
     printTotal: 'Total',
     printShortcuts: 'Keyboard shortcuts',
     timerShortcutHint: '⎵ Start / Pause   ·   R Reset',
+
+    // New session
+    newSession: 'New session',
+    newSessionConfirm: 'Clear all meeting data?',
+    newSessionYes: 'Yes, clear all',
+    newSessionNo: 'Cancel',
+    newSessionHint: 'Your config, words and custom fields are kept.',
 
     // PIN lock
     pinLocked: 'Session locked',
