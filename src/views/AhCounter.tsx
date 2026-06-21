@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Plus, Trash2, RotateCcw, X } from 'lucide-react'
+import { Plus, Trash2, RotateCcw, X, Download, Copy, Check } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { AhParticipant } from '../types'
 import { STORAGE_KEYS } from '../utils/storage'
+import { exportAhCounterCSV, exportAhCounterPersonCSV, ahCounterSummaryText, copyToClipboard } from '../utils/export'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 
@@ -15,6 +16,7 @@ export default function AhCounter() {
   const [activeWords, setActiveWords] = useLocalStorage<string[]>(STORAGE_KEYS.AH_WORDS, DEFAULT_WORDS)
   const [nameInput, setNameInput] = useState('')
   const [wordInput, setWordInput] = useState('')
+  const [copied, setCopied] = useState(false)
 
   const addParticipant = () => {
     if (!nameInput.trim()) return
@@ -70,9 +72,34 @@ export default function AhCounter() {
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Ah-Counter</h1>
-        <p className="text-slate-500 text-sm mt-1">Toca la muletilla del orador para registrarla</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Ah-Counter</h1>
+          <p className="text-slate-500 text-sm mt-1">Toca la muletilla del orador para registrarla</p>
+        </div>
+        {participants.length > 0 && (
+          <div className="flex gap-2 shrink-0">
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={copied ? <Check size={14} /> : <Copy size={14} />}
+              onClick={async () => {
+                const ok = await copyToClipboard(ahCounterSummaryText(participants))
+                if (ok) { setCopied(true); setTimeout(() => setCopied(false), 2000) }
+              }}
+            >
+              {copied ? 'Copiado' : 'Copiar'}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Download size={14} />}
+              onClick={() => exportAhCounterCSV(participants, activeWords)}
+            >
+              Exportar todo
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Top controls */}
@@ -159,13 +186,22 @@ export default function AhCounter() {
                 </div>
                 <div className="flex items-center gap-1">
                   {totalFor(p) > 0 && (
-                    <Badge variant={totalFor(p) < 3 ? 'warning' : 'danger'} >
+                    <Badge variant={totalFor(p) < 3 ? 'warning' : 'danger'}>
                       {totalFor(p)}
                     </Badge>
                   )}
+                  {totalFor(p) > 0 && (
+                    <button
+                      onClick={() => exportAhCounterPersonCSV(p, activeWords)}
+                      className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors ml-1"
+                      title="Exportar CSV de este orador"
+                    >
+                      <Download size={14} />
+                    </button>
+                  )}
                   <button
                     onClick={() => resetParticipant(p.id)}
-                    className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors ml-2"
+                    className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
                     title="Reiniciar conteo"
                   >
                     <RotateCcw size={14} />
