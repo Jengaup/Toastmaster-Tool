@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Play, Pause, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react'
+import { Play, Pause, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Check } from 'lucide-react'
 import { useTimer, getPhase, getPhaseColor } from '../hooks/useTimer'
 import { useLocalStorage } from '../hooks/useLocalStorage'
-import { SpeechType, SPEECH_PRESETS, TimerConfig } from '../types'
+import { SpeechType, SPEECH_PRESETS, TimerConfig, TimerRecord } from '../types'
 import { formatTime, secondsToInput, parseTimeInput } from '../utils/formatTime'
 import { STORAGE_KEYS } from '../utils/storage'
 import { Button } from '../components/ui/Button'
@@ -15,12 +15,13 @@ const CX = SIZE / 2
 const CY = SIZE / 2
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
+function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
+
 const PHASE_LABELS: Record<string, string> = {
-  neutral: 'Listo',
+  neutral: 'En espera…',
   verde: 'En tiempo',
   amarillo: 'Atención',
-  rojo: 'Tiempo límite',
-  excedido: 'Tiempo excedido',
+  rojo: 'Tiempo excedido',
 }
 
 export default function Temporizador() {
@@ -32,7 +33,10 @@ export default function Temporizador() {
     evaluacion: SPEECH_PRESETS.evaluacion,
     personalizado: SPEECH_PRESETS.personalizado,
   })
+  const [, setRecords] = useLocalStorage<TimerRecord[]>(STORAGE_KEYS.TIMER_RECORDS, [])
   const [showConfig, setShowConfig] = useState(false)
+  const [speakerName, setSpeakerName] = useState('')
+  const [savedFeedback, setSavedFeedback] = useState(false)
 
   const currentConfig = config[speechType]
   const phase = getPhase(elapsed, currentConfig)
@@ -54,6 +58,21 @@ export default function Temporizador() {
     reset()
   }
 
+  const saveToRecord = () => {
+    if (elapsed === 0) return
+    const record: TimerRecord = {
+      id: newId(),
+      nombre: speakerName.trim() || 'Sin nombre',
+      tipo: SPEECH_PRESETS[speechType].label,
+      tiempoFinal: elapsed,
+      notas: '',
+      fecha: new Date().toLocaleDateString('es-ES'),
+    }
+    setRecords((prev) => [...prev, record])
+    setSavedFeedback(true)
+    setTimeout(() => setSavedFeedback(false), 2000)
+  }
+
   return (
     <div className="p-4 md:p-8 max-w-2xl mx-auto">
       <div className="mb-6">
@@ -62,7 +81,7 @@ export default function Temporizador() {
       </div>
 
       {/* Tipo de discurso */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
         {(Object.keys(SPEECH_PRESETS) as SpeechType[]).map((type) => (
           <button
             key={type}
@@ -76,6 +95,15 @@ export default function Temporizador() {
             {SPEECH_PRESETS[type].label}
           </button>
         ))}
+      </div>
+
+      {/* Speaker name */}
+      <div className="mb-4">
+        <Input
+          value={speakerName}
+          onChange={(e) => setSpeakerName(e.target.value)}
+          placeholder="Nombre del orador (opcional)"
+        />
       </div>
 
       {/* Timer ring */}
@@ -104,6 +132,11 @@ export default function Temporizador() {
           </svg>
 
           <div className="absolute inset-0 flex flex-col items-center justify-center">
+            {speakerName && (
+              <div className="text-xs font-medium text-slate-500 mb-1 truncate max-w-[140px]">
+                {speakerName}
+              </div>
+            )}
             <div
               className="font-mono font-bold tracking-tight transition-colors duration-500"
               style={{
@@ -116,7 +149,7 @@ export default function Temporizador() {
             </div>
             {overtime > 0 && (
               <div className="text-red-500 font-mono text-sm mt-1 font-semibold">
-                +{formatTime(overtime)} excedido
+                +{formatTime(overtime)}
               </div>
             )}
             <div
@@ -160,6 +193,20 @@ export default function Temporizador() {
             Reiniciar
           </Button>
         </div>
+
+        {/* Save to record */}
+        {elapsed > 0 && (
+          <div className="mt-4">
+            <Button
+              variant={savedFeedback ? 'success' : 'ghost'}
+              size="sm"
+              icon={savedFeedback ? <Check size={15} /> : <BookmarkPlus size={15} />}
+              onClick={saveToRecord}
+            >
+              {savedFeedback ? 'Guardado en reporte' : 'Guardar en reporte'}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Config section */}

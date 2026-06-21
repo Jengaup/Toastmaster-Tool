@@ -28,6 +28,7 @@ export const STORAGE_KEYS = {
   TIMER_CONFIG: 'tm_timer_config',
   TIMER_RECORDS: 'tm_timer_records',
   AH_PARTICIPANTS: 'tm_ah_participants',
+  AH_WORDS: 'tm_ah_words',
   GRAMMAR_DATA: 'tm_grammar_data',
   EVALUADOR_DATA: 'tm_evaluador_data',
   CAMPOS_PERSONALIZADOS: 'tm_campos_personalizados',

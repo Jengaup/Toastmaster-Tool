@@ -2,11 +2,10 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { TimerPhase, TimerConfig } from '../types'
 
 export function getPhase(elapsed: number, config: TimerConfig): TimerPhase {
-  if (elapsed === 0) return 'neutral'
-  if (elapsed < config.greenTime) return 'verde'
-  if (elapsed < config.yellowTime) return 'amarillo'
-  if (elapsed < config.redTime) return 'rojo'
-  return 'excedido'
+  if (elapsed < config.greenTime) return 'neutral'
+  if (elapsed < config.yellowTime) return 'verde'
+  if (elapsed < config.redTime) return 'amarillo'
+  return 'rojo'
 }
 
 export function getPhaseColor(phase: TimerPhase): string {
@@ -14,7 +13,6 @@ export function getPhaseColor(phase: TimerPhase): string {
     case 'verde': return '#22c55e'
     case 'amarillo': return '#f59e0b'
     case 'rojo': return '#ef4444'
-    case 'excedido': return '#dc2626'
     default: return '#94a3b8'
   }
 }

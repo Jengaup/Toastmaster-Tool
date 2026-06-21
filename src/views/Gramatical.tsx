@@ -13,10 +13,8 @@ function newId() { return Date.now().toString(36) + Math.random().toString(36).s
 const DEFAULT_DATA: GrammarData = {
   palabraDelDia: 'Elocuente',
   definicion: 'Que tiene la capacidad de expresarse con claridad y persuasión.',
-  observaciones: [
-    { id: '1', nombre: 'María García', tipo: 'bueno', texto: 'Usó "elocuente" correctamente en contexto.' },
-    { id: '2', nombre: 'Carlos López', tipo: 'error', texto: 'Dijo "haiga" en lugar de "haya".' },
-  ],
+  observaciones: [],
+  usosDelDia: {},
 }
 
 const TIPO_LABELS = { bueno: 'Buen uso', error: 'Error / Observación', neutro: 'Neutro' }
@@ -32,6 +30,9 @@ export default function Gramatical() {
   const [editId, setEditId] = useState<string | null>(null)
   const [editPalabra, setEditPalabra] = useState(false)
   const [palabraForm, setPalabraForm] = useState({ palabraDelDia: data.palabraDelDia, definicion: data.definicion })
+  const [usoNombre, setUsoNombre] = useState('')
+
+  const usosDelDia = data.usosDelDia ?? {}
 
   const handleAddObservacion = () => {
     if (!form.nombre.trim() || !form.texto.trim()) return
@@ -67,6 +68,41 @@ export default function Gramatical() {
     setEditPalabra(false)
   }
 
+  const addUso = () => {
+    const nombre = usoNombre.trim()
+    if (!nombre) return
+    setData((prev) => ({
+      ...prev,
+      usosDelDia: { ...(prev.usosDelDia ?? {}), [nombre]: ((prev.usosDelDia ?? {})[nombre] || 0) + 1 },
+    }))
+  }
+
+  const incrementUso = (nombre: string) => {
+    setData((prev) => ({
+      ...prev,
+      usosDelDia: { ...(prev.usosDelDia ?? {}), [nombre]: ((prev.usosDelDia ?? {})[nombre] || 0) + 1 },
+    }))
+  }
+
+  const decrementUso = (nombre: string) => {
+    setData((prev) => {
+      const cur = (prev.usosDelDia ?? {})[nombre] || 0
+      if (cur <= 0) return prev
+      const updated = { ...(prev.usosDelDia ?? {}) }
+      if (cur === 1) delete updated[nombre]
+      else updated[nombre] = cur - 1
+      return { ...prev, usosDelDia: updated }
+    })
+  }
+
+  const removeUso = (nombre: string) => {
+    setData((prev) => {
+      const updated = { ...(prev.usosDelDia ?? {}) }
+      delete updated[nombre]
+      return { ...prev, usosDelDia: updated }
+    })
+  }
+
   const byParticipant = () => {
     const map: Record<string, { buenos: number; errores: number; neutros: number }> = {}
     data.observaciones.forEach((o) => {
@@ -77,6 +113,8 @@ export default function Gramatical() {
     })
     return Object.entries(map)
   }
+
+  const totalUsos = Object.values(usosDelDia).reduce((a, b) => a + b, 0)
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
@@ -124,6 +162,65 @@ export default function Gramatical() {
                 >
                   <Pencil size={12} /> Editar palabra del día
                 </button>
+              </div>
+            )}
+          </Card>
+
+          {/* Contador de usos de la palabra del día */}
+          <Card>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-slate-900 text-sm">Usos de "{data.palabraDelDia}"</h3>
+              {totalUsos > 0 && (
+                <Badge variant="info">{totalUsos} total</Badge>
+              )}
+            </div>
+
+            <div className="flex gap-2 mb-3">
+              <input
+                className="flex-1 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"
+                placeholder="Nombre del orador"
+                value={usoNombre}
+                onChange={(e) => setUsoNombre(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addUso()}
+              />
+              <button
+                onClick={addUso}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+
+            {Object.keys(usosDelDia).length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-2">Sin usos registrados</p>
+            ) : (
+              <div className="space-y-2">
+                {Object.entries(usosDelDia).map(([nombre, count]) => (
+                  <div key={nombre} className="flex items-center gap-2">
+                    <span className="text-sm text-slate-700 flex-1 truncate font-medium">{nombre}</span>
+                    <div className="flex items-center gap-1 border border-slate-200 rounded-lg overflow-hidden">
+                      <button
+                        onClick={() => decrementUso(nombre)}
+                        className="px-2 py-1 text-slate-500 hover:bg-slate-100 text-xs font-bold transition-colors"
+                      >
+                        −
+                      </button>
+                      <span className="px-2 text-sm font-bold text-indigo-600 font-mono min-w-[1.5rem] text-center">{count}</span>
+                      <button
+                        onClick={() => incrementUso(nombre)}
+                        className="px-2 py-1 text-slate-500 hover:bg-slate-100 text-xs font-bold transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => removeUso(nombre)}
+                      className="p-1 text-slate-300 hover:text-red-500 transition-colors"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </Card>

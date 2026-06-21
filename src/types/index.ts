@@ -43,6 +43,7 @@ export interface GrammarData {
   palabraDelDia: string
   definicion: string
   observaciones: GrammarObservacion[]
+  usosDelDia: Record<string, number>
 }
 
 export interface EvalSegmento {
