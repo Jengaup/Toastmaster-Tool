@@ -1,0 +1,203 @@
+import { useState } from 'react'
+import { Play, Pause, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react'
+import { useTimer, getPhase, getPhaseColor } from '../hooks/useTimer'
+import { useLocalStorage } from '../hooks/useLocalStorage'
+import { SpeechType, SPEECH_PRESETS, TimerConfig } from '../types'
+import { formatTime, secondsToInput, parseTimeInput } from '../utils/formatTime'
+import { STORAGE_KEYS } from '../utils/storage'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
+
+const RADIUS = 110
+const STROKE = 14
+const SIZE = 260
+const CX = SIZE / 2
+const CY = SIZE / 2
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS
+
+const PHASE_LABELS: Record<string, string> = {
+  neutral: 'Listo',
+  verde: 'En tiempo',
+  amarillo: 'Atención',
+  rojo: 'Tiempo límite',
+  excedido: 'Tiempo excedido',
+}
+
+export default function Temporizador() {
+  const { elapsed, isRunning, start, pause, reset } = useTimer()
+  const [speechType, setSpeechType] = useState<SpeechType>('preparado')
+  const [config, setConfig] = useLocalStorage<Record<SpeechType, TimerConfig>>(STORAGE_KEYS.TIMER_CONFIG, {
+    preparado: SPEECH_PRESETS.preparado,
+    'table-topics': SPEECH_PRESETS['table-topics'],
+    evaluacion: SPEECH_PRESETS.evaluacion,
+    personalizado: SPEECH_PRESETS.personalizado,
+  })
+  const [showConfig, setShowConfig] = useState(false)
+
+  const currentConfig = config[speechType]
+  const phase = getPhase(elapsed, currentConfig)
+  const color = getPhaseColor(phase)
+  const progress = Math.min(elapsed / currentConfig.redTime, 1)
+  const dashOffset = CIRCUMFERENCE * (1 - progress)
+  const overtime = elapsed > currentConfig.redTime ? elapsed - currentConfig.redTime : 0
+
+  const updateConfig = (field: keyof TimerConfig, rawValue: string) => {
+    const val = parseTimeInput(rawValue)
+    setConfig((prev) => ({
+      ...prev,
+      [speechType]: { ...prev[speechType], [field]: val },
+    }))
+  }
+
+  const handleSpeechType = (type: SpeechType) => {
+    setSpeechType(type)
+    reset()
+  }
+
+  return (
+    <div className="p-4 md:p-8 max-w-2xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900">Temporizador</h1>
+        <p className="text-slate-500 text-sm mt-1">Cronómetro para discursos Toastmasters</p>
+      </div>
+
+      {/* Tipo de discurso */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
+        {(Object.keys(SPEECH_PRESETS) as SpeechType[]).map((type) => (
+          <button
+            key={type}
+            onClick={() => handleSpeechType(type)}
+            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border ${
+              speechType === type
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
+            }`}
+          >
+            {SPEECH_PRESETS[type].label}
+          </button>
+        ))}
+      </div>
+
+      {/* Timer ring */}
+      <div
+        className="rounded-2xl p-6 flex flex-col items-center transition-colors duration-700"
+        style={{ backgroundColor: phase === 'neutral' ? '#f8fafc' : `${color}12` }}
+      >
+        <div className="relative">
+          <svg width={SIZE} height={SIZE} style={{ transform: 'rotate(-90deg)' }}>
+            <circle
+              cx={CX} cy={CY} r={RADIUS}
+              fill="none"
+              stroke="#e2e8f0"
+              strokeWidth={STROKE}
+            />
+            <circle
+              cx={CX} cy={CY} r={RADIUS}
+              fill="none"
+              stroke={color}
+              strokeWidth={STROKE}
+              strokeLinecap="round"
+              strokeDasharray={CIRCUMFERENCE}
+              strokeDashoffset={dashOffset}
+              style={{ transition: 'stroke-dashoffset 0.5s ease, stroke 0.5s ease' }}
+            />
+          </svg>
+
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div
+              className="font-mono font-bold tracking-tight transition-colors duration-500"
+              style={{
+                fontSize: elapsed >= 3600 ? '2.8rem' : '3.5rem',
+                color: phase === 'neutral' ? '#94a3b8' : color,
+                lineHeight: 1,
+              }}
+            >
+              {formatTime(elapsed)}
+            </div>
+            {overtime > 0 && (
+              <div className="text-red-500 font-mono text-sm mt-1 font-semibold">
+                +{formatTime(overtime)} excedido
+              </div>
+            )}
+            <div
+              className="mt-2 text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full"
+              style={{
+                backgroundColor: phase === 'neutral' ? '#f1f5f9' : `${color}22`,
+                color: phase === 'neutral' ? '#94a3b8' : color,
+              }}
+            >
+              {PHASE_LABELS[phase]}
+            </div>
+          </div>
+        </div>
+
+        {/* Umbral indicators */}
+        <div className="flex gap-6 mt-4">
+          {[
+            { label: 'Verde', time: currentConfig.greenTime, color: '#22c55e' },
+            { label: 'Amarillo', time: currentConfig.yellowTime, color: '#f59e0b' },
+            { label: 'Rojo', time: currentConfig.redTime, color: '#ef4444' },
+          ].map(({ label, time, color: c }) => (
+            <div key={label} className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c }} />
+              <span className="text-xs text-slate-500 font-medium">{label}: {formatTime(time)}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Controls */}
+        <div className="flex gap-3 mt-6">
+          {!isRunning ? (
+            <Button variant="success" size="xl" icon={<Play size={24} />} onClick={start}>
+              Iniciar
+            </Button>
+          ) : (
+            <Button variant="warning" size="xl" icon={<Pause size={24} />} onClick={pause}>
+              Pausar
+            </Button>
+          )}
+          <Button variant="secondary" size="xl" icon={<RotateCcw size={22} />} onClick={reset}>
+            Reiniciar
+          </Button>
+        </div>
+      </div>
+
+      {/* Config section */}
+      <div className="mt-4 bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <button
+          onClick={() => setShowConfig(!showConfig)}
+          className="w-full flex items-center justify-between px-5 py-4 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+        >
+          <span>Configurar tiempos — {SPEECH_PRESETS[speechType].label}</span>
+          {showConfig ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+
+        {showConfig && (
+          <div className="px-5 pb-5 border-t border-slate-100">
+            <div className="grid grid-cols-3 gap-4 pt-4">
+              <Input
+                label="🟢 Verde (MM:SS)"
+                defaultValue={secondsToInput(currentConfig.greenTime)}
+                onBlur={(e) => updateConfig('greenTime', e.target.value)}
+                placeholder="05:00"
+              />
+              <Input
+                label="🟡 Amarillo (MM:SS)"
+                defaultValue={secondsToInput(currentConfig.yellowTime)}
+                onBlur={(e) => updateConfig('yellowTime', e.target.value)}
+                placeholder="06:00"
+              />
+              <Input
+                label="🔴 Rojo (MM:SS)"
+                defaultValue={secondsToInput(currentConfig.redTime)}
+                onBlur={(e) => updateConfig('redTime', e.target.value)}
+                placeholder="07:00"
+              />
+            </div>
+            <p className="text-xs text-slate-400 mt-3">Los cambios se guardan automáticamente por tipo de discurso.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
