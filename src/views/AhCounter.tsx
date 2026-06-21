@@ -252,26 +252,60 @@ export default function AhCounter() {
           ))}
 
           {/* Summary */}
-          {participants.some(p => totalFor(p) > 0) && (
-            <div className="bg-white rounded-xl border border-slate-200 p-4">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Resumen de sesión</p>
-              <div className="space-y-2">
-                {participants.filter(p => totalFor(p) > 0).map((p) => (
-                  <div key={p.id} className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-slate-700 w-32 truncate">{p.nombre}</span>
-                    <div className="flex flex-wrap gap-1.5 flex-1">
-                      {Object.entries(p.muletillas).map(([word, count]) => (
-                        <span key={word} className="text-xs bg-red-50 text-red-600 border border-red-200 rounded px-2 py-0.5 font-medium">
-                          {word}: {count}
-                        </span>
-                      ))}
-                    </div>
-                    <Badge variant={totalFor(p) < 3 ? 'warning' : 'danger'}>{totalFor(p)}</Badge>
+          {participants.some(p => totalFor(p) > 0) && (() => {
+            const grandTotal = participants.reduce((sum, p) => sum + totalFor(p), 0)
+            const wordTotals: Record<string, number> = {}
+            participants.forEach((p) => {
+              Object.entries(p.muletillas).forEach(([w, c]) => {
+                wordTotals[w] = (wordTotals[w] || 0) + c
+              })
+            })
+            const topWord = Object.entries(wordTotals).sort((a, b) => b[1] - a[1])[0]
+
+            return (
+              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                {/* Stats bar */}
+                <div className="grid grid-cols-2 divide-x divide-slate-100 border-b border-slate-100">
+                  <div className="px-5 py-4 text-center">
+                    <div className="text-2xl font-bold text-slate-900 font-mono">{grandTotal}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">muletillas en total</div>
                   </div>
-                ))}
+                  <div className="px-5 py-4 text-center">
+                    {topWord ? (
+                      <>
+                        <div className="text-2xl font-bold text-red-500 font-mono">{topWord[1]}</div>
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          veces "<span className="font-semibold text-slate-700">{topWord[0]}</span>"
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-xs text-slate-400 py-2">—</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Per-participant rows */}
+                <div className="p-4">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Por orador</p>
+                  <div className="space-y-2">
+                    {participants.filter(p => totalFor(p) > 0).map((p) => (
+                      <div key={p.id} className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-slate-700 w-28 truncate shrink-0">{p.nombre}</span>
+                        <div className="flex flex-wrap gap-1.5 flex-1">
+                          {Object.entries(p.muletillas).map(([word, count]) => (
+                            <span key={word} className="text-xs bg-red-50 text-red-600 border border-red-200 rounded px-2 py-0.5 font-medium">
+                              {word}: {count}
+                            </span>
+                          ))}
+                        </div>
+                        <Badge variant={totalFor(p) < 3 ? 'warning' : 'danger'}>{totalFor(p)}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            )
+          })()}
         </div>
       )}
 
