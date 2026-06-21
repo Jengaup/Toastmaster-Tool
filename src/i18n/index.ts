@@ -204,6 +204,20 @@ const translations = {
     printTotal: 'Total',
     printShortcuts: 'Atajos de teclado',
     timerShortcutHint: '⎵ Iniciar / Pausar   ·   R Reiniciar',
+
+    // PIN lock
+    pinLocked: 'Sesión bloqueada',
+    pinUnlock: 'Desbloquear',
+    pinWrong: 'PIN incorrecto',
+    pinSetup: 'Activar PIN',
+    pinChange: 'Cambiar PIN',
+    pinLockNow: 'Bloquear',
+    pinNew: 'Nuevo PIN',
+    pinConfirm: 'Confirmar PIN',
+    pinMismatch: 'Los PIN no coinciden',
+    pinTooShort: 'Mínimo 4 caracteres',
+    pinSaved: '✓ PIN activado',
+    pinRemoved: '✓ PIN eliminado',
   },
 
   en: {
@@ -409,6 +423,20 @@ const translations = {
     printTotal: 'Total',
     printShortcuts: 'Keyboard shortcuts',
     timerShortcutHint: '⎵ Start / Pause   ·   R Reset',
+
+    // PIN lock
+    pinLocked: 'Session locked',
+    pinUnlock: 'Unlock',
+    pinWrong: 'Wrong PIN',
+    pinSetup: 'Enable PIN',
+    pinChange: 'Change PIN',
+    pinLockNow: 'Lock',
+    pinNew: 'New PIN',
+    pinConfirm: 'Confirm PIN',
+    pinMismatch: 'PINs do not match',
+    pinTooShort: 'Minimum 4 characters',
+    pinSaved: '✓ PIN enabled',
+    pinRemoved: '✓ PIN removed',
   },
 } as const
 
