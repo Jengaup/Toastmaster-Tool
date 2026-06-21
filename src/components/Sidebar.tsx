@@ -1,6 +1,6 @@
 import React from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Timer, ClipboardList, MessageSquare, BookOpen, Star, Settings, X, Mic } from 'lucide-react'
+import { Timer, ClipboardList, MessageSquare, BookOpen, Star, Settings, X, Mic, Printer } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { TKey } from '../i18n'
 
@@ -17,6 +17,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/gramatical', labelKey: 'navGrammar', icon: <BookOpen size={18} /> },
   { path: '/evaluador', labelKey: 'navEvaluator', icon: <Star size={18} /> },
   { path: '/personalizado', labelKey: 'navCustom', icon: <Settings size={18} /> },
+  { path: '/imprimir', labelKey: 'navPrint', icon: <Printer size={18} /> },
 ]
 
 interface SidebarProps {
@@ -38,7 +39,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       )}
 
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-slate-900 z-30 flex flex-col transition-transform duration-300 lg:relative lg:translate-x-0 lg:z-auto ${
+        className={`fixed top-0 left-0 h-full w-64 bg-slate-900 z-30 flex flex-col transition-transform duration-300 lg:relative lg:translate-x-0 lg:z-auto print:hidden ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

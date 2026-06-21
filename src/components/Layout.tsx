@@ -16,7 +16,7 @@ export function Layout({ children }: LayoutProps) {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="lg:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 z-10">
+        <header className="lg:hidden print:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 z-10">
           <button
             onClick={() => setSidebarOpen(true)}
             className="text-slate-600 hover:text-slate-900 p-1 rounded-lg hover:bg-slate-100 transition-colors"

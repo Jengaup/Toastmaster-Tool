@@ -7,6 +7,7 @@ import AhCounter from './views/AhCounter'
 import Gramatical from './views/Gramatical'
 import EvaluadorGeneral from './views/EvaluadorGeneral'
 import DatosPersonalizados from './views/DatosPersonalizados'
+import ImprimirReporte from './views/ImprimirReporte'
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
             <Route path="/gramatical" element={<Gramatical />} />
             <Route path="/evaluador" element={<EvaluadorGeneral />} />
             <Route path="/personalizado" element={<DatosPersonalizados />} />
+            <Route path="/imprimir" element={<ImprimirReporte />} />
           </Routes>
         </Layout>
       </HashRouter>

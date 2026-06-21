@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Play, Pause, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Check } from 'lucide-react'
 import { useTimer, getPhase, getPhaseColor } from '../hooks/useTimer'
 import { useLocalStorage } from '../hooks/useLocalStorage'
@@ -32,6 +32,21 @@ export default function Temporizador() {
   const [showConfig, setShowConfig] = useState(false)
   const [speakerName, setSpeakerName] = useState('')
   const [savedFeedback, setSavedFeedback] = useState(false)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      if (e.code === 'Space') {
+        e.preventDefault()
+        isRunning ? pause() : start()
+      } else if (e.code === 'KeyR') {
+        reset()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [isRunning, start, pause, reset])
 
   const speechLabels: Record<SpeechType, string> = {
     preparado: t('speechPrepared'),
@@ -210,6 +225,8 @@ export default function Temporizador() {
             </Button>
           </div>
         )}
+
+        <p className="mt-4 text-xs text-slate-400 font-mono">{t('timerShortcutHint')}</p>
       </div>
 
       {/* Config section */}
