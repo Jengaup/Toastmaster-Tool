@@ -1,21 +1,22 @@
 import React from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Timer, ClipboardList, MessageSquare, BookOpen, Star, Settings, X, Mic } from 'lucide-react'
+import { useLanguage } from '../contexts/LanguageContext'
+import { TKey } from '../i18n'
 
 interface NavItem {
   path: string
-  label: string
+  labelKey: TKey
   icon: React.ReactNode
-  description: string
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { path: '/temporizador', label: 'Temporizador', icon: <Timer size={18} />, description: 'Cronómetro para discursos' },
-  { path: '/reporte', label: 'Reporte de tiempos', icon: <ClipboardList size={18} />, description: 'Registro de tiempos' },
-  { path: '/ah-counter', label: 'Ah-Counter', icon: <MessageSquare size={18} />, description: 'Conteo de muletillas' },
-  { path: '/gramatical', label: 'Gramática', icon: <BookOpen size={18} />, description: 'Observaciones del gramatical' },
-  { path: '/evaluador', label: 'Evaluador general', icon: <Star size={18} />, description: 'Notas de evaluación' },
-  { path: '/personalizado', label: 'Datos personalizados', icon: <Settings size={18} />, description: 'Campos libres' },
+  { path: '/temporizador', labelKey: 'navTimer', icon: <Timer size={18} /> },
+  { path: '/reporte', labelKey: 'navReport', icon: <ClipboardList size={18} /> },
+  { path: '/ah-counter', labelKey: 'navAhCounter', icon: <MessageSquare size={18} /> },
+  { path: '/gramatical', labelKey: 'navGrammar', icon: <BookOpen size={18} /> },
+  { path: '/evaluador', labelKey: 'navEvaluator', icon: <Star size={18} /> },
+  { path: '/personalizado', labelKey: 'navCustom', icon: <Settings size={18} /> },
 ]
 
 interface SidebarProps {
@@ -25,6 +26,7 @@ interface SidebarProps {
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const location = useLocation()
+  const { t, toggleLang, lang } = useLanguage()
 
   return (
     <>
@@ -46,8 +48,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               <Mic size={16} className="text-white" />
             </div>
             <div>
-              <div className="text-white font-bold text-sm leading-none">TribunaPro</div>
-              <div className="text-slate-400 text-xs mt-0.5">Toastmasters</div>
+              <div className="text-white font-bold text-sm leading-none">TM Meeting</div>
+              <div className="text-slate-400 text-xs mt-0.5">Assistant</div>
             </div>
           </div>
           <button
@@ -73,15 +75,22 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 }`}
               >
                 <span className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}>{item.icon}</span>
-                <span className="font-medium">{item.label}</span>
+                <span className="font-medium">{t(item.labelKey)}</span>
               </NavLink>
             )
           })}
         </nav>
 
-        <div className="px-4 py-4 border-t border-slate-700/50">
-          <p className="text-xs text-slate-500 leading-relaxed">
-            Datos guardados localmente en tu navegador.
+        <div className="px-4 py-4 border-t border-slate-700/50 space-y-3">
+          <button
+            onClick={toggleLang}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all text-sm font-medium"
+          >
+            <span>{lang === 'es' ? '🇺🇸' : '🇪🇸'}</span>
+            <span>{t('langToggle')}</span>
+          </button>
+          <p className="text-xs text-slate-500 leading-relaxed text-center">
+            {t('localData')}
           </p>
         </div>
       </aside>

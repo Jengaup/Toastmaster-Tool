@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus, Trash2, Pencil, Check, X, BookOpen } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { useLanguage } from '../contexts/LanguageContext'
 import { GrammarData, GrammarObservacion } from '../types'
 import { STORAGE_KEYS } from '../utils/storage'
 import { Button } from '../components/ui/Button'
@@ -17,20 +18,25 @@ const DEFAULT_DATA: GrammarData = {
   usosDelDia: {},
 }
 
-const TIPO_LABELS = { bueno: 'Buen uso', error: 'Error / Observación', neutro: 'Neutro' }
-const TIPO_VARIANTS: Record<string, 'success' | 'danger' | 'neutral'> = {
-  bueno: 'success',
-  error: 'danger',
-  neutro: 'neutral',
-}
-
 export default function Gramatical() {
+  const { t } = useLanguage()
   const [data, setData] = useLocalStorage<GrammarData>(STORAGE_KEYS.GRAMMAR_DATA, DEFAULT_DATA)
   const [form, setForm] = useState({ nombre: '', tipo: 'bueno' as GrammarObservacion['tipo'], texto: '' })
   const [editId, setEditId] = useState<string | null>(null)
   const [editPalabra, setEditPalabra] = useState(false)
   const [palabraForm, setPalabraForm] = useState({ palabraDelDia: data.palabraDelDia, definicion: data.definicion })
   const [usoNombre, setUsoNombre] = useState('')
+
+  const TIPO_LABELS: Record<GrammarObservacion['tipo'], string> = {
+    bueno: t('gramTypeGood'),
+    error: t('gramTypeError'),
+    neutro: t('gramTypeNeutral'),
+  }
+  const TIPO_VARIANTS: Record<string, 'success' | 'danger' | 'neutral'> = {
+    bueno: 'success',
+    error: 'danger',
+    neutro: 'neutral',
+  }
 
   const usosDelDia = data.usosDelDia ?? {}
 
@@ -119,8 +125,8 @@ export default function Gramatical() {
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Gramática</h1>
-        <p className="text-slate-500 text-sm mt-1">Observaciones del responsable de gramática</p>
+        <h1 className="text-2xl font-bold text-slate-900">{t('gramTitle')}</h1>
+        <p className="text-slate-500 text-sm mt-1">{t('gramSubtitle')}</p>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
@@ -131,54 +137,52 @@ export default function Gramatical() {
               <div className="w-7 h-7 bg-indigo-100 rounded-lg flex items-center justify-center">
                 <BookOpen size={14} className="text-indigo-600" />
               </div>
-              <h3 className="font-semibold text-slate-900 text-sm">Palabra del día</h3>
+              <h3 className="font-semibold text-slate-900 text-sm">{t('gramWordOfDay')}</h3>
             </div>
 
             {editPalabra ? (
               <div className="space-y-3">
                 <Input
-                  label="Palabra"
+                  label={t('gramWordLabel')}
                   value={palabraForm.palabraDelDia}
                   onChange={(e) => setPalabraForm((p) => ({ ...p, palabraDelDia: e.target.value }))}
                 />
                 <Textarea
-                  label="Definición"
+                  label={t('gramDefinitionLabel')}
                   value={palabraForm.definicion}
                   onChange={(e) => setPalabraForm((p) => ({ ...p, definicion: e.target.value }))}
                   rows={3}
                 />
                 <div className="flex gap-2">
-                  <Button variant="primary" size="sm" icon={<Check size={14} />} onClick={savePalabra}>Guardar</Button>
-                  <Button variant="ghost" size="sm" icon={<X size={14} />} onClick={() => setEditPalabra(false)}>Cancelar</Button>
+                  <Button variant="primary" size="sm" icon={<Check size={14} />} onClick={savePalabra}>{t('gramSave')}</Button>
+                  <Button variant="ghost" size="sm" icon={<X size={14} />} onClick={() => setEditPalabra(false)}>{t('cancel')}</Button>
                 </div>
               </div>
             ) : (
               <div>
                 <div className="text-xl font-bold text-indigo-700 mb-1">{data.palabraDelDia}</div>
-                <p className="text-sm text-slate-600 leading-relaxed">{data.definicion || 'Sin definición'}</p>
+                <p className="text-sm text-slate-600 leading-relaxed">{data.definicion || t('gramNoDefinition')}</p>
                 <button
                   onClick={() => { setEditPalabra(true); setPalabraForm({ palabraDelDia: data.palabraDelDia, definicion: data.definicion }) }}
                   className="mt-3 text-xs text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors"
                 >
-                  <Pencil size={12} /> Editar palabra del día
+                  <Pencil size={12} /> {t('gramEditWordOfDay')}
                 </button>
               </div>
             )}
           </Card>
 
-          {/* Contador de usos de la palabra del día */}
+          {/* Usos de la palabra del día */}
           <Card>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-slate-900 text-sm">Usos de "{data.palabraDelDia}"</h3>
-              {totalUsos > 0 && (
-                <Badge variant="info">{totalUsos} total</Badge>
-              )}
+              <h3 className="font-semibold text-slate-900 text-sm">{t('gramUsesOf')} "{data.palabraDelDia}"</h3>
+              {totalUsos > 0 && <Badge variant="info">{totalUsos} {t('gramUsesTotal')}</Badge>}
             </div>
 
             <div className="flex gap-2 mb-3">
               <input
                 className="flex-1 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"
-                placeholder="Nombre del orador"
+                placeholder={t('gramSpeakerPlaceholder')}
                 value={usoNombre}
                 onChange={(e) => setUsoNombre(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && addUso()}
@@ -192,31 +196,18 @@ export default function Gramatical() {
             </div>
 
             {Object.keys(usosDelDia).length === 0 ? (
-              <p className="text-xs text-slate-400 text-center py-2">Sin usos registrados</p>
+              <p className="text-xs text-slate-400 text-center py-2">{t('gramNoUses')}</p>
             ) : (
               <div className="space-y-2">
                 {Object.entries(usosDelDia).map(([nombre, count]) => (
                   <div key={nombre} className="flex items-center gap-2">
                     <span className="text-sm text-slate-700 flex-1 truncate font-medium">{nombre}</span>
                     <div className="flex items-center gap-1 border border-slate-200 rounded-lg overflow-hidden">
-                      <button
-                        onClick={() => decrementUso(nombre)}
-                        className="px-2 py-1 text-slate-500 hover:bg-slate-100 text-xs font-bold transition-colors"
-                      >
-                        −
-                      </button>
+                      <button onClick={() => decrementUso(nombre)} className="px-2 py-1 text-slate-500 hover:bg-slate-100 text-xs font-bold transition-colors">−</button>
                       <span className="px-2 text-sm font-bold text-indigo-600 font-mono min-w-[1.5rem] text-center">{count}</span>
-                      <button
-                        onClick={() => incrementUso(nombre)}
-                        className="px-2 py-1 text-slate-500 hover:bg-slate-100 text-xs font-bold transition-colors"
-                      >
-                        +
-                      </button>
+                      <button onClick={() => incrementUso(nombre)} className="px-2 py-1 text-slate-500 hover:bg-slate-100 text-xs font-bold transition-colors">+</button>
                     </div>
-                    <button
-                      onClick={() => removeUso(nombre)}
-                      className="p-1 text-slate-300 hover:text-red-500 transition-colors"
-                    >
+                    <button onClick={() => removeUso(nombre)} className="p-1 text-slate-300 hover:text-red-500 transition-colors">
                       <X size={13} />
                     </button>
                   </div>
@@ -225,17 +216,16 @@ export default function Gramatical() {
             )}
           </Card>
 
-          {/* Summary by participant */}
           {byParticipant().length > 0 && (
-            <Card title="Resumen por participante">
+            <Card title={t('gramByParticipant')}>
               <div className="space-y-3">
                 {byParticipant().map(([nombre, counts]) => (
                   <div key={nombre}>
                     <div className="text-sm font-medium text-slate-800 mb-1 truncate">{nombre}</div>
                     <div className="flex gap-1.5">
-                      {counts.buenos > 0 && <Badge variant="success">{counts.buenos} buenos</Badge>}
-                      {counts.errores > 0 && <Badge variant="danger">{counts.errores} errores</Badge>}
-                      {counts.neutros > 0 && <Badge variant="neutral">{counts.neutros} neutros</Badge>}
+                      {counts.buenos > 0 && <Badge variant="success">{counts.buenos} {t('gramGoodBadge')}</Badge>}
+                      {counts.errores > 0 && <Badge variant="danger">{counts.errores} {t('gramErrorsBadge')}</Badge>}
+                      {counts.neutros > 0 && <Badge variant="neutral">{counts.neutros} {t('gramNeutralBadge')}</Badge>}
                     </div>
                   </div>
                 ))}
@@ -245,18 +235,17 @@ export default function Gramatical() {
         </div>
 
         <div className="md:col-span-2 space-y-4">
-          {/* Add form */}
-          <Card title={editId ? 'Editar observación' : 'Nueva observación'}>
+          <Card title={editId ? t('gramEditObs') : t('gramNewObs')}>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <Input
-                  label="Participante"
+                  label={t('gramParticipant')}
                   value={form.nombre}
                   onChange={(e) => setForm((p) => ({ ...p, nombre: e.target.value }))}
-                  placeholder="Nombre"
+                  placeholder={t('gramNamePlaceholder')}
                 />
                 <Select
-                  label="Tipo"
+                  label={t('gramType')}
                   value={form.tipo}
                   onChange={(e) => setForm((p) => ({ ...p, tipo: e.target.value as GrammarObservacion['tipo'] }))}
                 >
@@ -266,34 +255,33 @@ export default function Gramatical() {
                 </Select>
               </div>
               <Textarea
-                label="Observación"
+                label={t('gramObservation')}
                 value={form.texto}
                 onChange={(e) => setForm((p) => ({ ...p, texto: e.target.value }))}
-                placeholder="Describe el buen uso, error o comentario..."
+                placeholder={t('gramObsPlaceholder')}
                 rows={2}
               />
               <div className="flex gap-2">
                 {editId ? (
                   <>
-                    <Button variant="primary" size="sm" onClick={saveEdit}>Guardar cambios</Button>
+                    <Button variant="primary" size="sm" onClick={saveEdit}>{t('saveChanges')}</Button>
                     <Button variant="ghost" size="sm" icon={<X size={14} />} onClick={() => { setEditId(null); setForm({ nombre: '', tipo: 'bueno', texto: '' }) }}>
-                      Cancelar
+                      {t('cancel')}
                     </Button>
                   </>
                 ) : (
                   <Button variant="primary" size="sm" icon={<Plus size={16} />} onClick={handleAddObservacion}>
-                    Agregar observación
+                    {t('gramAddObs')}
                   </Button>
                 )}
               </div>
             </div>
           </Card>
 
-          {/* List */}
           <div className="space-y-2">
             {data.observaciones.length === 0 ? (
               <div className="bg-white rounded-xl border border-slate-200 p-10 text-center text-slate-400">
-                <p>Sin observaciones aún</p>
+                <p>{t('gramNoObs')}</p>
               </div>
             ) : (
               data.observaciones.map((obs) => (

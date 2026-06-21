@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus, Trash2, Check, RotateCcw, Copy } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { useLanguage } from '../contexts/LanguageContext'
 import { EvaluadorData, EvalSegmento, EvalChecklist } from '../types'
 import { STORAGE_KEYS } from '../utils/storage'
 import { copyToClipboard } from '../utils/export'
@@ -38,6 +39,7 @@ const DEFAULT_DATA: EvaluadorData = {
 }
 
 export default function EvaluadorGeneral() {
+  const { t } = useLanguage()
   const [data, setData] = useLocalStorage<EvaluadorData>(STORAGE_KEYS.EVALUADOR_DATA, DEFAULT_DATA)
   const [newSegmento, setNewSegmento] = useState('')
   const [newCheck, setNewCheck] = useState('')
@@ -88,7 +90,7 @@ export default function EvaluadorGeneral() {
       .filter((s) => s.notas.trim())
       .map((s) => `**${s.titulo}**\n${s.notas}`)
       .join('\n\n')
-    return `EVALUACIÓN GENERAL — ${date}\nChecklist: ${checkOk}/${checkTotal} ✓\n\n${segments}${data.resumenFinal ? `\n\nRESUMEN FINAL:\n${data.resumenFinal}` : ''}`
+    return `${t('evalSummaryHeader')} — ${date}\n${t('evalSummaryChecklist')}: ${checkOk}/${checkTotal} ✓\n\n${segments}${data.resumenFinal ? `\n\n${t('evalSummaryFinal')}:\n${data.resumenFinal}` : ''}`
   }
 
   const handleCopy = async () => {
@@ -104,49 +106,39 @@ export default function EvaluadorGeneral() {
     <div className="p-4 md:p-8 max-w-5xl mx-auto">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Evaluador general</h1>
-          <p className="text-slate-500 text-sm mt-1">Notas y checklist para la evaluación de la reunión</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t('evalTitle')}</h1>
+          <p className="text-slate-500 text-sm mt-1">{t('evalSubtitle')}</p>
         </div>
         <Button variant="secondary" size="sm" icon={copied ? <Check size={14} /> : <Copy size={14} />} onClick={handleCopy}>
-          {copied ? 'Copiado' : 'Copiar resumen'}
+          {copied ? t('copied') : t('evalCopyBtn')}
         </Button>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
-        {/* Checklist */}
         <div className="md:col-span-1">
           <Card
-            title="Checklist rápida"
-            subtitle={`${completedCount} / ${totalCount} completados`}
+            title={t('evalChecklistTitle')}
+            subtitle={`${completedCount} / ${totalCount} ${t('evalCompleted')}`}
             action={
               <button onClick={resetChecklist} className="text-slate-400 hover:text-amber-500 transition-colors p-1">
                 <RotateCcw size={14} />
               </button>
             }
           >
-            {/* Progress bar */}
             <div className="mb-4">
               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-                  style={{ width: `${pct}%` }}
-                />
+                <div className="h-full bg-indigo-500 rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
               </div>
               <p className="text-xs text-slate-400 mt-1 text-right">{pct}%</p>
             </div>
 
             <div className="space-y-1">
               {data.checklist.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-start gap-2.5 group"
-                >
+                <div key={item.id} className="flex items-start gap-2.5 group">
                   <button
                     onClick={() => toggleChecklist(item.id)}
-                    className={`mt-0.5 w-4.5 h-4.5 w-[18px] h-[18px] rounded border-2 flex items-center justify-center shrink-0 transition-all ${
-                      item.completado
-                        ? 'bg-green-500 border-green-500'
-                        : 'border-slate-300 hover:border-indigo-400'
+                    className={`mt-0.5 w-[18px] h-[18px] rounded border-2 flex items-center justify-center shrink-0 transition-all ${
+                      item.completado ? 'bg-green-500 border-green-500' : 'border-slate-300 hover:border-indigo-400'
                     }`}
                   >
                     {item.completado && <Check size={10} className="text-white" strokeWidth={3} />}
@@ -169,29 +161,22 @@ export default function EvaluadorGeneral() {
                 value={newCheck}
                 onChange={(e) => setNewCheck(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && addCheck()}
-                placeholder="Nueva tarea..."
+                placeholder={t('evalNewTask')}
                 className="flex-1 text-sm border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder-slate-300"
               />
-              <button
-                onClick={addCheck}
-                className="p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-              >
+              <button onClick={addCheck} className="p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
                 <Plus size={14} />
               </button>
             </div>
           </Card>
         </div>
 
-        {/* Notes by segment */}
         <div className="md:col-span-2 space-y-4">
           {data.segmentos.map((seg) => (
             <div key={seg.id} className="bg-white rounded-xl border border-slate-200 shadow-sm">
               <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
                 <h3 className="font-semibold text-slate-900 text-sm">{seg.titulo}</h3>
-                <button
-                  onClick={() => removeSegmento(seg.id)}
-                  className="text-slate-300 hover:text-red-400 transition-colors p-1"
-                >
+                <button onClick={() => removeSegmento(seg.id)} className="text-slate-300 hover:text-red-400 transition-colors p-1">
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -199,7 +184,7 @@ export default function EvaluadorGeneral() {
                 <textarea
                   value={seg.notas}
                   onChange={(e) => updateNota(seg.id, e.target.value)}
-                  placeholder="Escribe tus notas aquí..."
+                  placeholder={t('evalNotesPlaceholder')}
                   rows={3}
                   className="w-full text-sm text-slate-700 placeholder-slate-300 border-0 resize-none focus:outline-none focus:ring-0 leading-relaxed"
                 />
@@ -207,29 +192,27 @@ export default function EvaluadorGeneral() {
             </div>
           ))}
 
-          {/* Add segment */}
           <div className="flex gap-2">
             <input
               value={newSegmento}
               onChange={(e) => setNewSegmento(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addSegmento()}
-              placeholder="Nuevo segmento..."
+              placeholder={t('evalNewSegmentPlaceholder')}
               className="flex-1 text-sm border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white placeholder-slate-300"
             />
             <button
               onClick={addSegmento}
               className="px-4 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors flex items-center gap-2 text-sm font-medium"
             >
-              <Plus size={16} /> Segmento
+              <Plus size={16} /> {t('evalSegmentBtn')}
             </button>
           </div>
 
-          {/* Resumen final */}
-          <Card title="Resumen final">
+          <Card title={t('evalFinalSummary')}>
             <Textarea
               value={data.resumenFinal}
               onChange={(e) => setData((prev) => ({ ...prev, resumenFinal: e.target.value }))}
-              placeholder="Escribe aquí el resumen general de la reunión para presentarlo ante los miembros..."
+              placeholder={t('evalFinalPlaceholder')}
               rows={5}
             />
           </Card>

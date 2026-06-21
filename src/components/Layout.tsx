@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Menu } from 'lucide-react'
 import { Sidebar } from './Sidebar'
+import { useLanguage } from '../contexts/LanguageContext'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -8,6 +9,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { t } = useLanguage()
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
@@ -21,7 +23,7 @@ export function Layout({ children }: LayoutProps) {
           >
             <Menu size={22} />
           </button>
-          <span className="font-semibold text-slate-900 text-sm">TribunaPro</span>
+          <span className="font-semibold text-slate-900 text-sm">{t('appName')}</span>
         </header>
 
         <main className="flex-1 overflow-y-auto">

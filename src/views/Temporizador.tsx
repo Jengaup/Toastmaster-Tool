@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Play, Pause, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Check } from 'lucide-react'
 import { useTimer, getPhase, getPhaseColor } from '../hooks/useTimer'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { useLanguage } from '../contexts/LanguageContext'
 import { SpeechType, SPEECH_PRESETS, TimerConfig, TimerRecord } from '../types'
 import { formatTime, secondsToInput, parseTimeInput } from '../utils/formatTime'
 import { STORAGE_KEYS } from '../utils/storage'
@@ -17,14 +18,8 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
 function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
-const PHASE_LABELS: Record<string, string> = {
-  neutral: 'En espera…',
-  verde: 'En tiempo',
-  amarillo: 'Atención',
-  rojo: 'Tiempo excedido',
-}
-
 export default function Temporizador() {
+  const { t } = useLanguage()
   const { elapsed, isRunning, start, pause, reset } = useTimer()
   const [speechType, setSpeechType] = useState<SpeechType>('preparado')
   const [config, setConfig] = useLocalStorage<Record<SpeechType, TimerConfig>>(STORAGE_KEYS.TIMER_CONFIG, {
@@ -37,6 +32,20 @@ export default function Temporizador() {
   const [showConfig, setShowConfig] = useState(false)
   const [speakerName, setSpeakerName] = useState('')
   const [savedFeedback, setSavedFeedback] = useState(false)
+
+  const speechLabels: Record<SpeechType, string> = {
+    preparado: t('speechPrepared'),
+    'table-topics': t('speechTableTopics'),
+    evaluacion: t('speechEvaluation'),
+    personalizado: t('speechCustom'),
+  }
+
+  const phaseLabels: Record<string, string> = {
+    neutral: t('timerPhaseNeutral'),
+    verde: t('timerPhaseGreen'),
+    amarillo: t('timerPhaseYellow'),
+    rojo: t('timerPhaseRed'),
+  }
 
   const currentConfig = config[speechType]
   const phase = getPhase(elapsed, currentConfig)
@@ -63,7 +72,7 @@ export default function Temporizador() {
     const record: TimerRecord = {
       id: newId(),
       nombre: speakerName.trim() || 'Sin nombre',
-      tipo: SPEECH_PRESETS[speechType].label,
+      tipo: speechLabels[speechType],
       tiempoFinal: elapsed,
       notas: '',
       fecha: new Date().toLocaleDateString('es-ES'),
@@ -76,8 +85,8 @@ export default function Temporizador() {
   return (
     <div className="p-4 md:p-8 max-w-2xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Temporizador</h1>
-        <p className="text-slate-500 text-sm mt-1">Cronómetro para discursos Toastmasters</p>
+        <h1 className="text-2xl font-bold text-slate-900">{t('timerTitle')}</h1>
+        <p className="text-slate-500 text-sm mt-1">{t('timerSubtitle')}</p>
       </div>
 
       {/* Tipo de discurso */}
@@ -92,7 +101,7 @@ export default function Temporizador() {
                 : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
             }`}
           >
-            {SPEECH_PRESETS[type].label}
+            {speechLabels[type]}
           </button>
         ))}
       </div>
@@ -102,7 +111,7 @@ export default function Temporizador() {
         <Input
           value={speakerName}
           onChange={(e) => setSpeakerName(e.target.value)}
-          placeholder="Nombre del orador (opcional)"
+          placeholder={t('timerSpeakerPlaceholder')}
         />
       </div>
 
@@ -113,12 +122,7 @@ export default function Temporizador() {
       >
         <div className="relative">
           <svg width={SIZE} height={SIZE} style={{ transform: 'rotate(-90deg)' }}>
-            <circle
-              cx={CX} cy={CY} r={RADIUS}
-              fill="none"
-              stroke="#e2e8f0"
-              strokeWidth={STROKE}
-            />
+            <circle cx={CX} cy={CY} r={RADIUS} fill="none" stroke="#e2e8f0" strokeWidth={STROKE} />
             <circle
               cx={CX} cy={CY} r={RADIUS}
               fill="none"
@@ -159,21 +163,21 @@ export default function Temporizador() {
                 color: phase === 'neutral' ? '#94a3b8' : color,
               }}
             >
-              {PHASE_LABELS[phase]}
+              {phaseLabels[phase]}
             </div>
           </div>
         </div>
 
         {/* Umbral indicators */}
         <div className="flex gap-6 mt-4">
-          {[
-            { label: 'Verde', time: currentConfig.greenTime, color: '#22c55e' },
-            { label: 'Amarillo', time: currentConfig.yellowTime, color: '#f59e0b' },
-            { label: 'Rojo', time: currentConfig.redTime, color: '#ef4444' },
-          ].map(({ label, time, color: c }) => (
-            <div key={label} className="flex items-center gap-1.5">
+          {([
+            { labelKey: 'timerGreen' as const, time: currentConfig.greenTime, color: '#22c55e' },
+            { labelKey: 'timerYellow' as const, time: currentConfig.yellowTime, color: '#f59e0b' },
+            { labelKey: 'timerRed' as const, time: currentConfig.redTime, color: '#ef4444' },
+          ]).map(({ labelKey, time, color: c }) => (
+            <div key={labelKey} className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c }} />
-              <span className="text-xs text-slate-500 font-medium">{label}: {formatTime(time)}</span>
+              <span className="text-xs text-slate-500 font-medium">{t(labelKey)}: {formatTime(time)}</span>
             </div>
           ))}
         </div>
@@ -182,19 +186,18 @@ export default function Temporizador() {
         <div className="flex gap-3 mt-6">
           {!isRunning ? (
             <Button variant="success" size="xl" icon={<Play size={24} />} onClick={start}>
-              Iniciar
+              {t('timerStart')}
             </Button>
           ) : (
             <Button variant="warning" size="xl" icon={<Pause size={24} />} onClick={pause}>
-              Pausar
+              {t('timerPause')}
             </Button>
           )}
           <Button variant="secondary" size="xl" icon={<RotateCcw size={22} />} onClick={reset}>
-            Reiniciar
+            {t('timerReset')}
           </Button>
         </div>
 
-        {/* Save to record */}
         {elapsed > 0 && (
           <div className="mt-4">
             <Button
@@ -203,7 +206,7 @@ export default function Temporizador() {
               icon={savedFeedback ? <Check size={15} /> : <BookmarkPlus size={15} />}
               onClick={saveToRecord}
             >
-              {savedFeedback ? 'Guardado en reporte' : 'Guardar en reporte'}
+              {savedFeedback ? t('timerSaved') : t('timerSave')}
             </Button>
           </div>
         )}
@@ -215,7 +218,7 @@ export default function Temporizador() {
           onClick={() => setShowConfig(!showConfig)}
           className="w-full flex items-center justify-between px-5 py-4 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
         >
-          <span>Configurar tiempos — {SPEECH_PRESETS[speechType].label}</span>
+          <span>{t('timerConfigTitle')} — {speechLabels[speechType]}</span>
           {showConfig ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
 
@@ -223,25 +226,25 @@ export default function Temporizador() {
           <div className="px-5 pb-5 border-t border-slate-100">
             <div className="grid grid-cols-3 gap-4 pt-4">
               <Input
-                label="🟢 Verde (MM:SS)"
+                label={t('timerConfigGreenLabel')}
                 defaultValue={secondsToInput(currentConfig.greenTime)}
                 onBlur={(e) => updateConfig('greenTime', e.target.value)}
                 placeholder="05:00"
               />
               <Input
-                label="🟡 Amarillo (MM:SS)"
+                label={t('timerConfigYellowLabel')}
                 defaultValue={secondsToInput(currentConfig.yellowTime)}
                 onBlur={(e) => updateConfig('yellowTime', e.target.value)}
                 placeholder="06:00"
               />
               <Input
-                label="🔴 Rojo (MM:SS)"
+                label={t('timerConfigRedLabel')}
                 defaultValue={secondsToInput(currentConfig.redTime)}
                 onBlur={(e) => updateConfig('redTime', e.target.value)}
                 placeholder="07:00"
               />
             </div>
-            <p className="text-xs text-slate-400 mt-3">Los cambios se guardan automáticamente por tipo de discurso.</p>
+            <p className="text-xs text-slate-400 mt-3">{t('timerConfigNote')}</p>
           </div>
         )}
       </div>

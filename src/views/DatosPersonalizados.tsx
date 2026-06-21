@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus, Trash2, Pencil, Check, X, GripVertical } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { useLanguage } from '../contexts/LanguageContext'
 import { CampoPersonalizado } from '../types'
 import { STORAGE_KEYS } from '../utils/storage'
 import { Button } from '../components/ui/Button'
@@ -18,14 +19,8 @@ const SAMPLE_CAMPOS: CampoPersonalizado[] = [
   { id: '5', etiqueta: 'Tema de la reunión', tipo: 'texto', valor: 'Superando obstáculos' },
 ]
 
-const TIPO_LABELS: Record<CampoPersonalizado['tipo'], string> = {
-  texto: 'Texto',
-  numero: 'Número',
-  'si-no': 'Sí / No',
-  lista: 'Lista',
-}
-
 export default function DatosPersonalizados() {
+  const { t } = useLanguage()
   const [campos, setCampos] = useLocalStorage<CampoPersonalizado[]>(STORAGE_KEYS.CAMPOS_PERSONALIZADOS, SAMPLE_CAMPOS)
   const [form, setForm] = useState<{ etiqueta: string; tipo: CampoPersonalizado['tipo']; valor: string; opciones: string }>({
     etiqueta: '',
@@ -35,6 +30,13 @@ export default function DatosPersonalizados() {
   })
   const [editId, setEditId] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
+
+  const TIPO_LABELS: Record<CampoPersonalizado['tipo'], string> = {
+    texto: t('customTypeText'),
+    numero: t('customTypeNumber'),
+    'si-no': t('customTypeYesNo'),
+    lista: t('customTypeList'),
+  }
 
   const handleSave = () => {
     if (!form.etiqueta.trim()) return
@@ -62,12 +64,7 @@ export default function DatosPersonalizados() {
 
   const startEdit = (c: CampoPersonalizado) => {
     setEditId(c.id)
-    setForm({
-      etiqueta: c.etiqueta,
-      tipo: c.tipo,
-      valor: c.valor,
-      opciones: c.opciones ? c.opciones.join('\n') : '',
-    })
+    setForm({ etiqueta: c.etiqueta, tipo: c.tipo, valor: c.valor, opciones: c.opciones ? c.opciones.join('\n') : '' })
     setShowForm(true)
   }
 
@@ -85,29 +82,29 @@ export default function DatosPersonalizados() {
     <div className="p-4 md:p-8 max-w-3xl mx-auto">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Datos personalizados</h1>
-          <p className="text-slate-500 text-sm mt-1">Campos libres adaptados a tu club o reunión</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t('customTitle')}</h1>
+          <p className="text-slate-500 text-sm mt-1">{t('customSubtitle')}</p>
         </div>
         {!showForm && (
           <Button variant="primary" size="sm" icon={<Plus size={16} />} onClick={() => setShowForm(true)}>
-            Nuevo campo
+            {t('customNewField')}
           </Button>
         )}
       </div>
 
       {showForm && (
-        <Card title={editId ? 'Editar campo' : 'Nuevo campo'} className="mb-6">
+        <Card title={editId ? t('customEditField') : t('customNewField')} className="mb-6">
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <Input
-                label="Nombre del campo"
+                label={t('customFieldName')}
                 value={form.etiqueta}
                 onChange={(e) => setForm((p) => ({ ...p, etiqueta: e.target.value }))}
-                placeholder="Ej: Tema de reunión"
+                placeholder={t('customFieldPlaceholder')}
                 autoFocus
               />
               <Select
-                label="Tipo"
+                label={t('customTypeLabel')}
                 value={form.tipo}
                 onChange={(e) => setForm((p) => ({ ...p, tipo: e.target.value as CampoPersonalizado['tipo'] }))}
               >
@@ -119,15 +116,15 @@ export default function DatosPersonalizados() {
 
             {form.tipo === 'texto' && (
               <Input
-                label="Valor por defecto"
+                label={t('customDefaultValue')}
                 value={form.valor}
                 onChange={(e) => setForm((p) => ({ ...p, valor: e.target.value }))}
-                placeholder="Opcional"
+                placeholder={t('customOptional')}
               />
             )}
             {form.tipo === 'numero' && (
               <Input
-                label="Valor por defecto"
+                label={t('customDefaultValue')}
                 type="number"
                 value={form.valor}
                 onChange={(e) => setForm((p) => ({ ...p, valor: e.target.value }))}
@@ -136,42 +133,41 @@ export default function DatosPersonalizados() {
             )}
             {form.tipo === 'si-no' && (
               <Select
-                label="Valor por defecto"
+                label={t('customDefaultValue')}
                 value={form.valor}
                 onChange={(e) => setForm((p) => ({ ...p, valor: e.target.value }))}
               >
-                <option value="">Sin seleccionar</option>
-                <option value="true">Sí</option>
-                <option value="false">No</option>
+                <option value="">{t('customNoSelection')}</option>
+                <option value="true">{t('customYes')}</option>
+                <option value="false">{t('customNo')}</option>
               </Select>
             )}
             {form.tipo === 'lista' && (
               <Textarea
-                label="Opciones (una por línea)"
+                label={t('customListOptions')}
                 value={form.opciones}
                 onChange={(e) => setForm((p) => ({ ...p, opciones: e.target.value }))}
-                placeholder="Opción 1&#10;Opción 2&#10;Opción 3"
+                placeholder={`${t('customOptional')} 1\n${t('customOptional')} 2`}
                 rows={4}
               />
             )}
 
             <div className="flex gap-2 pt-2">
               <Button variant="primary" icon={<Check size={14} />} onClick={handleSave}>
-                {editId ? 'Guardar cambios' : 'Crear campo'}
+                {editId ? t('saveChanges') : t('customCreateField')}
               </Button>
-              <Button variant="ghost" icon={<X size={14} />} onClick={cancelForm}>Cancelar</Button>
+              <Button variant="ghost" icon={<X size={14} />} onClick={cancelForm}>{t('cancel')}</Button>
             </div>
           </div>
         </Card>
       )}
 
-      {/* Fields list */}
       {campos.length === 0 ? (
         <div className="bg-white rounded-xl border border-slate-200 p-12 text-center text-slate-400">
-          <p className="text-lg font-medium">Sin campos personalizados</p>
-          <p className="text-sm mt-1">Crea campos para guardar información relevante de tu reunión</p>
+          <p className="text-lg font-medium">{t('customEmpty')}</p>
+          <p className="text-sm mt-1">{t('customEmptySub')}</p>
           <Button variant="primary" icon={<Plus size={16} />} className="mt-4" onClick={() => setShowForm(true)}>
-            Crear primer campo
+            {t('customCreateFirst')}
           </Button>
         </div>
       ) : (
@@ -193,7 +189,7 @@ export default function DatosPersonalizados() {
                     value={campo.valor}
                     onChange={(e) => updateValor(campo.id, e.target.value)}
                     className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder-slate-300"
-                    placeholder="Escribe el valor..."
+                    placeholder={t('customValuePlaceholder')}
                   />
                 )}
                 {campo.tipo === 'numero' && (
@@ -206,7 +202,7 @@ export default function DatosPersonalizados() {
                 )}
                 {campo.tipo === 'si-no' && (
                   <div className="flex gap-2">
-                    {['true', 'false', ''].map((v) => (
+                    {(['true', 'false', ''] as const).map((v) => (
                       <button
                         key={v}
                         onClick={() => updateValor(campo.id, v)}
@@ -218,7 +214,7 @@ export default function DatosPersonalizados() {
                             : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
                         }`}
                       >
-                        {v === 'true' ? 'Sí' : v === 'false' ? 'No' : 'Sin seleccionar'}
+                        {v === 'true' ? t('customYes') : v === 'false' ? t('customNo') : t('customNoSelection')}
                       </button>
                     ))}
                   </div>
@@ -229,22 +225,16 @@ export default function DatosPersonalizados() {
                     onChange={(e) => updateValor(campo.id, e.target.value)}
                     className="text-sm border border-slate-200 rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
                   >
-                    <option value="">Seleccionar...</option>
+                    <option value="">{t('customSelectPlaceholder')}</option>
                     {campo.opciones.map((op) => <option key={op}>{op}</option>)}
                   </select>
                 )}
               </div>
               <div className="flex gap-1 shrink-0">
-                <button
-                  onClick={() => startEdit(campo)}
-                  className="p-1.5 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                >
+                <button onClick={() => startEdit(campo)} className="p-1.5 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
                   <Pencil size={14} />
                 </button>
-                <button
-                  onClick={() => handleDelete(campo.id)}
-                  className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                >
+                <button onClick={() => handleDelete(campo.id)} className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                   <Trash2 size={14} />
                 </button>
               </div>
