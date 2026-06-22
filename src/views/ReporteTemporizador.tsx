@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Trash2, Download, Copy, Check, Pencil, X } from 'lucide-react'
+import { Plus, Trash2, Download, Copy, Check, Pencil, X, ClipboardList } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useLanguage } from '../contexts/LanguageContext'
 import { TimerRecord, SPEECH_PRESETS } from '../types'
@@ -7,8 +7,19 @@ import { formatTime, parseTimeInput, secondsToInput } from '../utils/formatTime'
 import { exportTimerCSV, timerRecordsSummary, copyToClipboard } from '../utils/export'
 import { STORAGE_KEYS } from '../utils/storage'
 import { Button } from '../components/ui/Button'
+import { Badge } from '../components/ui/Badge'
 import { Input, Select } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
+
+type SpeechBadgeVariant = 'violet' | 'pink' | 'info' | 'neutral'
+
+function speechTypeBadge(tipo: string): SpeechBadgeVariant {
+  const lower = tipo.toLowerCase()
+  if (lower.includes('table')) return 'pink'
+  if (lower.includes('eval')) return 'info'
+  if (lower.includes('preparado') || lower.includes('prepared') || lower.includes('discurso')) return 'violet'
+  return 'neutral'
+}
 
 function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
@@ -126,39 +137,52 @@ export default function ReporteTemporizador() {
 
       <Card>
         {records.length === 0 ? (
-          <div className="text-center py-10 text-slate-400">
-            <p className="text-lg">{t('reportEmpty')}</p>
-            <p className="text-sm mt-1">{t('reportEmptySub')}</p>
+          <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-400">
+            <ClipboardList size={40} strokeWidth={1.25} className="text-slate-300" />
+            <div className="text-center">
+              <p className="font-medium text-slate-500">{t('reportEmpty')}</p>
+              <p className="text-sm mt-0.5">{t('reportEmptySub')}</p>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto -mx-5">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="sticky top-0 z-10">
                 <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">#</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('reportName')}</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('reportType')}</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('reportTime')}</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">{t('reportNotes')}</th>
-                  <th className="px-5 py-3" />
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider w-10">#</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('reportName')}</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('reportType')}</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('reportTime')}</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider hidden md:table-cell">{t('reportNotes')}</th>
+                  <th className="px-5 py-3 w-20" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {records.map((r, i) => (
-                  <tr key={r.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-5 py-3 text-slate-400 font-mono text-xs">{i + 1}</td>
-                    <td className="px-5 py-3 font-medium text-slate-800">{r.nombre}</td>
-                    <td className="px-5 py-3 text-slate-600">{r.tipo}</td>
-                    <td className="px-5 py-3">
-                      <span className="font-mono font-semibold text-slate-800">{formatTime(r.tiempoFinal)}</span>
+                  <tr key={r.id} className={`transition-colors hover:bg-slate-50 ${editId === r.id ? 'bg-indigo-50/50' : ''}`}>
+                    <td className="px-5 py-3.5 text-slate-400 font-mono text-xs">{i + 1}</td>
+                    <td className="px-5 py-3.5 font-semibold text-slate-800">{r.nombre}</td>
+                    <td className="px-5 py-3.5">
+                      <Badge variant={speechTypeBadge(r.tipo)}>{r.tipo}</Badge>
                     </td>
-                    <td className="px-5 py-3 text-slate-500 hidden md:table-cell">{r.notas || '—'}</td>
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-3.5">
+                      <span className="font-timer font-bold text-slate-800 tabular-nums">{formatTime(r.tiempoFinal)}</span>
+                    </td>
+                    <td className="px-5 py-3.5 text-slate-500 hidden md:table-cell max-w-xs truncate">
+                      {r.notas || <span className="text-slate-300">—</span>}
+                    </td>
+                    <td className="px-5 py-3.5">
                       <div className="flex gap-1 justify-end">
-                        <button onClick={() => startEdit(r)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                        <button
+                          onClick={() => startEdit(r)}
+                          className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        >
                           <Pencil size={14} />
                         </button>
-                        <button onClick={() => handleDelete(r.id)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                        <button
+                          onClick={() => handleDelete(r.id)}
+                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        >
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -168,11 +192,12 @@ export default function ReporteTemporizador() {
               </tbody>
               <tfoot>
                 <tr className="border-t-2 border-slate-200 bg-slate-50">
-                  <td colSpan={3} className="px-5 py-3 text-xs font-semibold text-slate-500 uppercase">
+                  <td colSpan={3} className="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">
                     {t('reportTotal')}: {records.length} {t('reportParticipants')}
                   </td>
-                  <td className="px-5 py-3 font-mono font-bold text-slate-700">
-                    {formatTime(Math.round(records.reduce((sum, r) => sum + r.tiempoFinal, 0) / records.length))} {t('reportAvg')}
+                  <td className="px-5 py-3 font-timer font-bold text-slate-700">
+                    {formatTime(Math.round(records.reduce((sum, r) => sum + r.tiempoFinal, 0) / records.length))}
+                    <span className="text-xs font-sans font-normal text-slate-400 ml-1">{t('reportAvg')}</span>
                   </td>
                   <td colSpan={2} />
                 </tr>

@@ -203,7 +203,7 @@ const translations = {
     printType: 'Tipo',
     printTotal: 'Total',
     printShortcuts: 'Atajos de teclado',
-    timerShortcutHint: '⎵ Iniciar / Pausar   ·   R Reiniciar',
+    timerShortcutHint: '⎵ Iniciar / Pausar   ·   R Reiniciar   ·   F Pantalla completa',
 
     // New session
     newSession: 'Nueva sesión',
@@ -429,7 +429,7 @@ const translations = {
     printType: 'Type',
     printTotal: 'Total',
     printShortcuts: 'Keyboard shortcuts',
-    timerShortcutHint: '⎵ Start / Pause   ·   R Reset',
+    timerShortcutHint: '⎵ Start / Pause   ·   R Reset   ·   F Fullscreen',
 
     // New session
     newSession: 'New session',
