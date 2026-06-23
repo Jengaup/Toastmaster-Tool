@@ -14,14 +14,14 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { path: '/temporizador', labelKey: 'navTimer',     icon: <Timer size={18} />,        activeBg: 'bg-emerald-600' },
-  { path: '/reporte',      labelKey: 'navReport',    icon: <ClipboardList size={18} />, activeBg: 'bg-sky-600'    },
-  { path: '/ah-counter',   labelKey: 'navAhCounter', icon: <MessageSquare size={18} />, activeBg: 'bg-orange-500' },
-  { path: '/gramatical',   labelKey: 'navGrammar',   icon: <BookOpen size={18} />,      activeBg: 'bg-violet-600' },
-  { path: '/evaluador',    labelKey: 'navEvaluator', icon: <Star size={18} />,          activeBg: 'bg-amber-500'  },
-  { path: '/personalizado',  labelKey: 'navCustom',      icon: <Settings size={18} />,    activeBg: 'bg-slate-500'  },
-  { path: '/evaluaciones',   labelKey: 'navContextEval', icon: <FileCheck2 size={18} />,  activeBg: 'bg-teal-600'   },
-  { path: '/imprimir',       labelKey: 'navPrint',       icon: <Printer size={18} />,     activeBg: 'bg-indigo-600' },
+  { path: '/temporizador',  labelKey: 'navTimer',       icon: <Timer size={18} />,         activeBg: 'bg-emerald-600' },
+  { path: '/reporte',       labelKey: 'navReport',      icon: <ClipboardList size={18} />, activeBg: 'bg-sky-600'    },
+  { path: '/ah-counter',    labelKey: 'navAhCounter',   icon: <MessageSquare size={18} />, activeBg: 'bg-orange-500' },
+  { path: '/gramatical',    labelKey: 'navGrammar',     icon: <BookOpen size={18} />,      activeBg: 'bg-violet-600' },
+  { path: '/evaluaciones',  labelKey: 'navContextEval', icon: <FileCheck2 size={18} />,    activeBg: 'bg-teal-600'   },
+  { path: '/evaluador',     labelKey: 'navEvaluator',   icon: <Star size={18} />,          activeBg: 'bg-amber-500'  },
+  { path: '/imprimir',      labelKey: 'navPrint',       icon: <Printer size={18} />,       activeBg: 'bg-indigo-600' },
+  { path: '/personalizado', labelKey: 'navCustom',      icon: <Settings size={18} />,      activeBg: 'bg-slate-500'  },
 ]
 
 interface SidebarProps {

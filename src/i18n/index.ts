@@ -7,7 +7,7 @@ const translations = {
     localData: 'Datos guardados localmente en tu navegador.',
 
     // Nav
-    navTimer: 'Temporizador',
+    navTimer: 'Monitor de Tiempo',
     navTimerDesc: 'Cronómetro para discursos',
     navReport: 'Reporte de tiempos',
     navReportDesc: 'Registro de tiempos',
@@ -261,7 +261,7 @@ const translations = {
     localData: 'Data saved locally in your browser.',
 
     // Nav
-    navTimer: 'Timer',
+    navTimer: 'Time Monitor',
     navTimerDesc: 'Speech timer',
     navReport: 'Time Report',
     navReportDesc: 'Time records',
