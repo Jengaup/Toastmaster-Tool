@@ -1,12 +1,14 @@
-import { Volume2, User, LayoutList } from 'lucide-react'
+import { Volume2, User, LayoutList, Plus, Trash2, Bookmark, BookmarkCheck } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useLanguage } from '../contexts/LanguageContext'
-import { EvalContextoData, EvalContextoTipo, LCOption, VVRatings } from '../types'
+import {
+  EvalContextoData, EvalContextoStore, EvalInstance, EvalContextoTipo, LCOption, VVRatings,
+} from '../types'
 import { STORAGE_KEYS } from '../utils/storage'
 import { Card } from '../components/ui/Card'
 import { Input, Textarea } from '../components/ui/Input'
 
-// ── Default data ─────────────────────────────────────────────────────────────
+// ── Defaults ──────────────────────────────────────────────────────────────────
 
 const DEFAULT_VV_RATINGS: VVRatings = {
   volumen_proyeccion: 0, volumen_dinamico: 0,
@@ -25,7 +27,43 @@ export const DEFAULT_EVAL_CONTEXTO: EvalContextoData = {
   org: { propGeneral: '', propEspecifico: '', cautivoTitulo: '', hiloConductor: '', puntos: '', ejemplos: '', transiciones: '', apertura: '', cierre: '', mejor: '' },
 }
 
-// ── Static content data ───────────────────────────────────────────────────────
+export const DEFAULT_EVAL_STORE: EvalContextoStore = { instances: [], activeId: null, reportId: null }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
+
+function createInstance(tipo: EvalContextoTipo): EvalInstance {
+  return {
+    id: newId(),
+    createdAt: new Date().toISOString(),
+    data: {
+      ...DEFAULT_EVAL_CONTEXTO,
+      tipo,
+      vv: { ...DEFAULT_EVAL_CONTEXTO.vv, ratings: { ...DEFAULT_VV_RATINGS } },
+      lc: { ...DEFAULT_EVAL_CONTEXTO.lc },
+      org: { ...DEFAULT_EVAL_CONTEXTO.org },
+    },
+  }
+}
+
+const TIPO_CLASSES = {
+  'variedad-vocal':    { icon: <Volume2 size={18} />,   iconBg: 'bg-rose-100 text-rose-600',  color: 'text-rose-700',  border: 'border-rose-300 bg-rose-50',  label: 'Variedad Vocal' },
+  'lenguaje-corporal': { icon: <User size={18} />,       iconBg: 'bg-sky-100 text-sky-600',    color: 'text-sky-700',   border: 'border-sky-300 bg-sky-50',    label: 'Lenguaje Corporal' },
+  'organizacion':      { icon: <LayoutList size={18} />, iconBg: 'bg-teal-100 text-teal-600',  color: 'text-teal-700',  border: 'border-teal-300 bg-teal-50',  label: 'Organización' },
+}
+
+function instanceLabel(inst: EvalInstance, all: EvalInstance[]): string {
+  const tipo = inst.data.tipo!
+  const meta = TIPO_CLASSES[tipo]
+  const sameType = all.filter(i => i.data.tipo === tipo)
+  const n = sameType.findIndex(i => i.id === inst.id) + 1
+  const numSuffix = sameType.length > 1 ? ` #${n}` : ''
+  const oradorPart = inst.data.nombreOrador ? ` — ${inst.data.nombreOrador}` : ''
+  return `${meta.label}${numSuffix}${oradorPart}`
+}
+
+// ── Static form data ──────────────────────────────────────────────────────────
 
 const VV_GROUPS: Array<{ title: string; rows: Array<{ key: keyof VVRatings; left: string; right: string }> }> = [
   {
@@ -45,35 +83,35 @@ const VV_GROUPS: Array<{ title: string; rows: Array<{ key: keyof VVRatings; left
   {
     title: 'Calidad de la voz',
     rows: [
-      { key: 'voz_abierta',     left: 'Nasal — Susurrante', right: 'Abierta' },
-      { key: 'voz_suave',       left: 'Fuerte, áspera', right: 'Suave, agradable' },
-      { key: 'voz_entusiasta',  left: 'Sin vida', right: 'Entusiasta, interesante' },
+      { key: 'voz_abierta',    left: 'Nasal — Susurrante',  right: 'Abierta' },
+      { key: 'voz_suave',      left: 'Fuerte, áspera',      right: 'Suave, agradable' },
+      { key: 'voz_entusiasta', left: 'Sin vida',             right: 'Entusiasta, interesante' },
     ]
   },
   {
     title: 'Articulación (Uso de las palabras)',
     rows: [
-      { key: 'artic_clara',          left: 'Murmuración', right: 'Articulación clara' },
-      { key: 'artic_pronunciacion',  left: 'Pronunciación incorrecta', right: 'Pronunciación correcta' },
-      { key: 'artic_pausas',         left: 'Mala elección de pausas', right: 'Uso eficaz de pausas' },
+      { key: 'artic_clara',         left: 'Murmuración',              right: 'Articulación clara' },
+      { key: 'artic_pronunciacion', left: 'Pronunciación incorrecta', right: 'Pronunciación correcta' },
+      { key: 'artic_pausas',        left: 'Mala elección de pausas',  right: 'Uso eficaz de pausas' },
     ]
   },
   {
     title: 'Cadencia o velocidad',
     rows: [
-      { key: 'cadencia_regular',     left: 'Errático', right: 'Regular' },
-      { key: 'cadencia_fluido',      left: 'Lento, pesado — Rápido, en carrera', right: 'Fluido' },
-      { key: 'cadencia_variado',     left: 'Sin variación', right: 'Variado, entretenido' },
-      { key: 'cadencia_deliberado',  left: 'Vacilante', right: 'Deliberado' },
-      { key: 'cadencia_fluido2',     left: 'Alta velocidad', right: 'Fluido' },
+      { key: 'cadencia_regular',    left: 'Errático',                              right: 'Regular' },
+      { key: 'cadencia_fluido',     left: 'Lento, pesado — Rápido, en carrera',   right: 'Fluido' },
+      { key: 'cadencia_variado',    left: 'Sin variación',                         right: 'Variado, entretenido' },
+      { key: 'cadencia_deliberado', left: 'Vacilante',                             right: 'Deliberado' },
+      { key: 'cadencia_fluido2',    left: 'Alta velocidad',                        right: 'Fluido' },
     ]
   },
   {
     title: 'Variedad Vocal',
     rows: [
-      { key: 'variedad_emocion',  left: 'Sin emoción — Emociones exageradas', right: 'Transmite bien la emoción' },
-      { key: 'variedad_genial',   left: 'Antipático', right: 'Genial' },
-      { key: 'variedad_natural',  left: 'Tenso', right: 'Natural' },
+      { key: 'variedad_emocion', left: 'Sin emoción — Emociones exageradas', right: 'Transmite bien la emoción' },
+      { key: 'variedad_genial',  left: 'Antipático',                         right: 'Genial' },
+      { key: 'variedad_natural', left: 'Tenso',                              right: 'Natural' },
     ]
   },
 ]
@@ -83,62 +121,13 @@ const LC_FIELDS: Array<{
   label: string
   options: Array<{ value: LCOption; label: string }>
 }> = [
-  {
-    key: 'manera', label: 'Manera',
-    options: [
-      { value: 'bueno', label: 'Confiado, entusiasta' },
-      { value: 'regular', label: 'Satisfactorio' },
-      { value: 'mejorar', label: 'Nervioso, tenso' },
-    ]
-  },
-  {
-    key: 'postura', label: 'Postura',
-    options: [
-      { value: 'bueno', label: 'Ecuánime, equilibrado' },
-      { value: 'regular', label: 'Satisfactorio' },
-      { value: 'mejorar', label: 'Puede mejorar' },
-    ]
-  },
-  {
-    key: 'gestos', label: 'Gestos',
-    options: [
-      { value: 'bueno', label: 'Naturales, evocativos' },
-      { value: 'regular', label: 'Satisfactorio' },
-      { value: 'mejorar', label: 'Puede mejorar' },
-    ]
-  },
-  {
-    key: 'movimiento', label: 'Movimiento corporal',
-    options: [
-      { value: 'bueno', label: 'Determinado, directo' },
-      { value: 'regular', label: 'Satisfactorio' },
-      { value: 'mejorar', label: 'Inadecuado, distrae la atención' },
-    ]
-  },
-  {
-    key: 'contactoVisual', label: 'Contacto visual',
-    options: [
-      { value: 'bueno', label: 'Vínculos visuales establecidos' },
-      { value: 'regular', label: 'Satisfactorio' },
-      { value: 'mejorar', label: 'Puede mejorar' },
-    ]
-  },
-  {
-    key: 'expresionFacial', label: 'Expresión facial',
-    options: [
-      { value: 'bueno', label: 'Animado, amistoso, genuino' },
-      { value: 'regular', label: 'Satisfactorio' },
-      { value: 'mejorar', label: 'Puede mejorar' },
-    ]
-  },
-  {
-    key: 'general', label: 'Lenguaje corporal general',
-    options: [
-      { value: 'bueno', label: 'Natural, expresivo' },
-      { value: 'regular', label: 'Satisfactorio' },
-      { value: 'mejorar', label: 'Poco natural, distrae la atención' },
-    ]
-  },
+  { key: 'manera',         label: 'Manera',                    options: [{ value: 'bueno', label: 'Confiado, entusiasta' }, { value: 'regular', label: 'Satisfactorio' }, { value: 'mejorar', label: 'Nervioso, tenso' }] },
+  { key: 'postura',        label: 'Postura',                   options: [{ value: 'bueno', label: 'Ecuánime, equilibrado' }, { value: 'regular', label: 'Satisfactorio' }, { value: 'mejorar', label: 'Puede mejorar' }] },
+  { key: 'gestos',         label: 'Gestos',                    options: [{ value: 'bueno', label: 'Naturales, evocativos' }, { value: 'regular', label: 'Satisfactorio' }, { value: 'mejorar', label: 'Puede mejorar' }] },
+  { key: 'movimiento',     label: 'Movimiento corporal',       options: [{ value: 'bueno', label: 'Determinado, directo' }, { value: 'regular', label: 'Satisfactorio' }, { value: 'mejorar', label: 'Inadecuado, distrae la atención' }] },
+  { key: 'contactoVisual', label: 'Contacto visual',           options: [{ value: 'bueno', label: 'Vínculos visuales establecidos' }, { value: 'regular', label: 'Satisfactorio' }, { value: 'mejorar', label: 'Puede mejorar' }] },
+  { key: 'expresionFacial',label: 'Expresión facial',          options: [{ value: 'bueno', label: 'Animado, amistoso, genuino' }, { value: 'regular', label: 'Satisfactorio' }, { value: 'mejorar', label: 'Puede mejorar' }] },
+  { key: 'general',        label: 'Lenguaje corporal general', options: [{ value: 'bueno', label: 'Natural, expresivo' }, { value: 'regular', label: 'Satisfactorio' }, { value: 'mejorar', label: 'Poco natural, distrae la atención' }] },
 ]
 
 const ORG_ITEMS: Array<{ key: keyof EvalContextoData['org']; label: string; hint?: string }> = [
@@ -156,9 +145,9 @@ const ORG_ITEMS: Array<{ key: keyof EvalContextoData['org']; label: string; hint
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function RatingScale({
-  left, right, value, onChange,
-}: { left: string; right: string; value: number; onChange: (v: number) => void }) {
+function RatingScale({ left, right, value, onChange }: {
+  left: string; right: string; value: number; onChange: (v: number) => void
+}) {
   const dotColor = (n: number) => {
     if (value !== n) return 'bg-white border-slate-200 text-slate-400 hover:border-indigo-300 hover:text-indigo-500'
     if (n <= 2) return 'bg-red-500 border-red-500 text-white'
@@ -185,9 +174,7 @@ function RatingScale({
   )
 }
 
-function RadioGroup({
-  label, value, options, onChange,
-}: {
+function RadioGroup({ label, value, options, onChange }: {
   label: string
   value: string
   options: Array<{ value: LCOption; label: string }>
@@ -206,22 +193,13 @@ function RadioGroup({
           <label
             key={opt.value}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-sm flex-1 ${
-              value === opt.value
-                ? `${optColor[opt.value]} font-medium`
-                : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+              value === opt.value ? `${optColor[opt.value]} font-medium` : 'border-slate-200 text-slate-600 hover:bg-slate-50'
             }`}
           >
-            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-              value === opt.value ? 'border-current' : 'border-slate-300'
-            }`}>
+            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${value === opt.value ? 'border-current' : 'border-slate-300'}`}>
               {value === opt.value && <div className="w-2 h-2 rounded-full bg-current" />}
             </div>
-            <input
-              type="radio"
-              className="sr-only"
-              checked={value === opt.value}
-              onChange={() => onChange(opt.value)}
-            />
+            <input type="radio" className="sr-only" checked={value === opt.value} onChange={() => onChange(opt.value)} />
             {opt.label}
           </label>
         ))}
@@ -234,56 +212,61 @@ function RadioGroup({
 
 export default function EvaluacionesContexto() {
   const { t } = useLanguage()
-  const [data, setData] = useLocalStorage<EvalContextoData>(STORAGE_KEYS.EVAL_CONTEXTO, DEFAULT_EVAL_CONTEXTO)
+  const [rawStore, setStore] = useLocalStorage<EvalContextoStore>(STORAGE_KEYS.EVAL_CONTEXTO, DEFAULT_EVAL_STORE)
 
-  const setTipo = (tipo: EvalContextoTipo) => setData(d => ({ ...d, tipo: d.tipo === tipo ? null : tipo }))
+  // Migration guard: old format had 'tipo' field, new format has 'instances'
+  const store: EvalContextoStore = Array.isArray(rawStore?.instances) ? rawStore : DEFAULT_EVAL_STORE
+
+  const activeInst = store.instances.find(i => i.id === store.activeId) ?? null
+
+  // ── Store mutations ──────────────────────────────────────────────────────
+
+  const addInstance = (tipo: EvalContextoTipo) => {
+    const inst = createInstance(tipo)
+    setStore(s => {
+      const base = Array.isArray(s?.instances) ? s : DEFAULT_EVAL_STORE
+      return { ...base, instances: [...base.instances, inst], activeId: inst.id }
+    })
+  }
+
+  const setActive = (id: string) => setStore(s => ({ ...s, activeId: id }))
+
+  const toggleReport = (id: string) =>
+    setStore(s => ({ ...s, reportId: s.reportId === id ? null : id }))
+
+  const deleteInst = (id: string) =>
+    setStore(s => ({
+      ...s,
+      instances: s.instances.filter(i => i.id !== id),
+      activeId: s.activeId === id ? null : s.activeId,
+      reportId: s.reportId === id ? null : s.reportId,
+    }))
+
+  const updateActiveData = (updater: (d: EvalContextoData) => EvalContextoData) =>
+    setStore(s => ({
+      ...s,
+      instances: s.instances.map(inst =>
+        inst.id === s.activeId ? { ...inst, data: updater(inst.data) } : inst
+      ),
+    }))
+
   const setHeader = (field: 'nombreOrador' | 'evaluador' | 'fecha' | 'titulo', value: string) =>
-    setData(d => ({ ...d, [field]: value }))
+    updateActiveData(d => ({ ...d, [field]: value }))
   const setVV = (field: 'destacaste' | 'trabajar' | 'desafio', value: string) =>
-    setData(d => ({ ...d, vv: { ...d.vv, [field]: value } }))
+    updateActiveData(d => ({ ...d, vv: { ...d.vv, [field]: value } }))
   const setVVRating = (key: keyof VVRatings, value: number) =>
-    setData(d => ({ ...d, vv: { ...d.vv, ratings: { ...d.vv.ratings, [key]: value } } }))
+    updateActiveData(d => ({ ...d, vv: { ...d.vv, ratings: { ...d.vv.ratings, [key]: value } } }))
   const setLC = (field: keyof EvalContextoData['lc'], value: string) =>
-    setData(d => ({ ...d, lc: { ...d.lc, [field]: value } }))
+    updateActiveData(d => ({ ...d, lc: { ...d.lc, [field]: value } }))
   const setOrg = (field: keyof EvalContextoData['org'], value: string) =>
-    setData(d => ({ ...d, org: { ...d.org, [field]: value } }))
+    updateActiveData(d => ({ ...d, org: { ...d.org, [field]: value } }))
 
-  const EVAL_OPTIONS: Array<{
-    tipo: EvalContextoTipo
-    icon: React.ReactNode
-    title: string
-    desc: string
-    color: string
-    border: string
-    iconBg: string
-  }> = [
-    {
-      tipo: 'variedad-vocal',
-      icon: <Volume2 size={22} />,
-      title: t('contextVVTitle'),
-      desc: t('contextVVDesc'),
-      color: 'text-rose-700',
-      border: 'border-rose-300 bg-rose-50',
-      iconBg: 'bg-rose-100 text-rose-600',
-    },
-    {
-      tipo: 'lenguaje-corporal',
-      icon: <User size={22} />,
-      title: t('contextLCTitle'),
-      desc: t('contextLCDesc'),
-      color: 'text-sky-700',
-      border: 'border-sky-300 bg-sky-50',
-      iconBg: 'bg-sky-100 text-sky-600',
-    },
-    {
-      tipo: 'organizacion',
-      icon: <LayoutList size={22} />,
-      title: t('contextOrgTitle'),
-      desc: t('contextOrgDesc'),
-      color: 'text-teal-700',
-      border: 'border-teal-300 bg-teal-50',
-      iconBg: 'bg-teal-100 text-teal-600',
-    },
+  // ── Render ───────────────────────────────────────────────────────────────
+
+  const EVAL_OPTIONS: Array<{ tipo: EvalContextoTipo; title: string; desc: string }> = [
+    { tipo: 'variedad-vocal',    title: t('contextVVTitle'),  desc: t('contextVVDesc')  },
+    { tipo: 'lenguaje-corporal', title: t('contextLCTitle'),  desc: t('contextLCDesc')  },
+    { tipo: 'organizacion',      title: t('contextOrgTitle'), desc: t('contextOrgDesc') },
   ]
 
   return (
@@ -293,70 +276,143 @@ export default function EvaluacionesContexto() {
         <p className="text-slate-500 text-sm mt-1">{t('contextSubtitle')}</p>
       </div>
 
-      {/* Selection cards */}
-      <div className="mb-2">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">{t('contextChooseEval')}</p>
+      {/* ── Nueva evaluación ── */}
+      <div className="mb-6">
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Nueva evaluación</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {EVAL_OPTIONS.map(opt => {
-            const isActive = data.tipo === opt.tipo
+            const meta = TIPO_CLASSES[opt.tipo]
             return (
               <button
                 key={opt.tipo}
                 type="button"
-                onClick={() => setTipo(opt.tipo)}
-                className={`flex flex-col items-start gap-2 p-4 rounded-xl border-2 text-left transition-all active:scale-[0.97] ${
-                  isActive
-                    ? `${opt.border} shadow-sm`
-                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-                }`}
+                onClick={() => addInstance(opt.tipo)}
+                className="flex flex-col items-start gap-2 p-4 rounded-xl border-2 border-dashed border-slate-200 bg-white text-left transition-all hover:border-slate-300 hover:bg-slate-50 active:scale-[0.97] group"
               >
-                <div className={`p-2 rounded-lg ${isActive ? opt.iconBg : 'bg-slate-100 text-slate-500'}`}>
-                  {opt.icon}
-                </div>
-                <div>
-                  <div className={`font-semibold text-sm ${isActive ? opt.color : 'text-slate-700'}`}>
-                    {opt.title}
+                <div className="flex items-center gap-2 w-full">
+                  <div className={`p-1.5 rounded-lg ${meta.iconBg}`}>{meta.icon}</div>
+                  <div className="flex-1">
+                    <div className={`font-semibold text-sm ${meta.color}`}>{opt.title}</div>
+                    <div className="text-xs text-slate-400 mt-0.5">{opt.desc}</div>
                   </div>
-                  <div className="text-xs text-slate-400 mt-0.5">{opt.desc}</div>
+                  <Plus size={15} className="text-slate-300 group-hover:text-slate-500 transition-colors shrink-0" />
                 </div>
-                {isActive && (
-                  <span className={`text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${opt.iconBg}`}>
-                    Activa
-                  </span>
-                )}
               </button>
             )
           })}
         </div>
       </div>
 
-      {/* Form — only shown when a tipo is selected */}
-      {data.tipo && (
-        <div className="mt-6 space-y-4">
+      {/* ── Evaluaciones guardadas ── */}
+      {store.instances.length > 0 && (
+        <Card title={`Evaluaciones guardadas (${store.instances.length})`} className="mb-6">
+          <div className="-mx-5 divide-y divide-slate-100">
+            {store.instances.map(inst => {
+              const meta = TIPO_CLASSES[inst.data.tipo!]
+              const isActive = store.activeId === inst.id
+              const isReport = store.reportId === inst.id
+              const label = instanceLabel(inst, store.instances)
+              return (
+                <div
+                  key={inst.id}
+                  className={`flex items-center border-l-2 transition-colors ${
+                    isActive ? 'bg-indigo-50/60 border-l-indigo-400' : 'border-l-transparent hover:bg-slate-50'
+                  }`}
+                >
+                  <button
+                    className="flex-1 flex items-center gap-3 px-5 py-3 text-left"
+                    onClick={() => setActive(inst.id)}
+                  >
+                    <div className={`p-1.5 rounded-md shrink-0 ${isActive ? meta.iconBg : 'bg-slate-100 text-slate-500'}`}>
+                      {meta.icon}
+                    </div>
+                    <div className="min-w-0">
+                      <div className={`text-sm font-semibold truncate ${isActive ? meta.color : 'text-slate-700'}`}>
+                        {label}
+                      </div>
+                      {isReport && (
+                        <div className="text-xs text-indigo-500 font-medium">Para reporte</div>
+                      )}
+                    </div>
+                    {isActive && (
+                      <span className="ml-auto shrink-0 text-xs bg-indigo-100 text-indigo-700 font-semibold px-2 py-0.5 rounded-full">
+                        Activa
+                      </span>
+                    )}
+                  </button>
+                  <div className="flex items-center gap-0.5 pr-4 shrink-0">
+                    <button
+                      title={isReport ? 'Quitar del reporte' : 'Usar en reporte'}
+                      onClick={() => toggleReport(inst.id)}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        isReport
+                          ? 'text-indigo-500 hover:bg-indigo-50'
+                          : 'text-slate-300 hover:text-indigo-400 hover:bg-slate-100'
+                      }`}
+                    >
+                      {isReport ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
+                    </button>
+                    <button
+                      title="Eliminar"
+                      onClick={() => deleteInst(inst.id)}
+                      className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* ── Formulario de evaluación activa ── */}
+      {activeInst && (
+        <div className="space-y-4">
+          {/* Editing header */}
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs text-slate-400 uppercase tracking-wide font-semibold">Editando</p>
+              <p className="text-sm font-bold text-slate-800">{instanceLabel(activeInst, store.instances)}</p>
+            </div>
+            <button
+              onClick={() => toggleReport(activeInst.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all shrink-0 ${
+                store.reportId === activeInst.id
+                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                  : 'border-slate-200 text-slate-500 hover:border-indigo-200 hover:text-indigo-600 hover:bg-indigo-50'
+              }`}
+            >
+              {store.reportId === activeInst.id ? <BookmarkCheck size={13} /> : <Bookmark size={13} />}
+              {store.reportId === activeInst.id ? 'Para reporte' : 'Usar en reporte'}
+            </button>
+          </div>
+
           {/* Common header fields */}
           <Card>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label={t('contextNombreOrador')}
-                value={data.nombreOrador}
+                value={activeInst.data.nombreOrador}
                 onChange={e => setHeader('nombreOrador', e.target.value)}
                 placeholder="María García"
               />
               <Input
                 label={t('contextEvaluador')}
-                value={data.evaluador}
+                value={activeInst.data.evaluador}
                 onChange={e => setHeader('evaluador', e.target.value)}
                 placeholder="Tu nombre"
               />
               <Input
                 label={t('contextFecha')}
-                value={data.fecha}
+                value={activeInst.data.fecha}
                 onChange={e => setHeader('fecha', e.target.value)}
                 type="date"
               />
               <Input
                 label={t('contextTitulo')}
-                value={data.titulo}
+                value={activeInst.data.titulo}
                 onChange={e => setHeader('titulo', e.target.value)}
                 placeholder="Título del discurso"
               />
@@ -364,36 +420,15 @@ export default function EvaluacionesContexto() {
           </Card>
 
           {/* ── Variedad Vocal ── */}
-          {data.tipo === 'variedad-vocal' && (
+          {activeInst.data.tipo === 'variedad-vocal' && (
             <>
-              {/* Page 1: General comments */}
               <Card title={t('contextVVComments')}>
                 <div className="space-y-4">
-                  <Textarea
-                    label={t('contextVVDestacaste')}
-                    value={data.vv.destacaste}
-                    onChange={e => setVV('destacaste', e.target.value)}
-                    rows={3}
-                    placeholder="Puntos fuertes del orador..."
-                  />
-                  <Textarea
-                    label={t('contextVVTrabajar')}
-                    value={data.vv.trabajar}
-                    onChange={e => setVV('trabajar', e.target.value)}
-                    rows={3}
-                    placeholder="Áreas de mejora..."
-                  />
-                  <Textarea
-                    label={t('contextVVDesafio')}
-                    value={data.vv.desafio}
-                    onChange={e => setVV('desafio', e.target.value)}
-                    rows={3}
-                    placeholder="Sugerencias para el siguiente nivel..."
-                  />
+                  <Textarea label={t('contextVVDestacaste')} value={activeInst.data.vv.destacaste} onChange={e => setVV('destacaste', e.target.value)} rows={3} placeholder="Puntos fuertes del orador..." />
+                  <Textarea label={t('contextVVTrabajar')}   value={activeInst.data.vv.trabajar}   onChange={e => setVV('trabajar', e.target.value)}   rows={3} placeholder="Áreas de mejora..." />
+                  <Textarea label={t('contextVVDesafio')}    value={activeInst.data.vv.desafio}    onChange={e => setVV('desafio', e.target.value)}    rows={3} placeholder="Sugerencias para el siguiente nivel..." />
                 </div>
               </Card>
-
-              {/* Page 2: Rating scales */}
               <Card title={t('contextVVProfile')}>
                 <div className="flex justify-between text-xs font-bold mb-4 px-1">
                   <span className="text-red-500 uppercase tracking-wide">{t('contextVVIneficaz')} ←</span>
@@ -411,7 +446,7 @@ export default function EvaluacionesContexto() {
                             key={row.key}
                             left={row.left}
                             right={row.right}
-                            value={data.vv.ratings[row.key]}
+                            value={activeInst.data.vv.ratings[row.key]}
                             onChange={v => setVVRating(row.key, v)}
                           />
                         ))}
@@ -424,48 +459,34 @@ export default function EvaluacionesContexto() {
           )}
 
           {/* ── Lenguaje Corporal ── */}
-          {data.tipo === 'lenguaje-corporal' && (
+          {activeInst.data.tipo === 'lenguaje-corporal' && (
             <Card title={t('contextLCTitle')}>
               <div className="bg-sky-50 border border-sky-200 rounded-lg p-3 mb-5 text-xs text-sky-700 leading-relaxed">
                 <span className="font-semibold">{t('contextLCNote')}: </span>
                 El orador debe usar la postura, movimiento corporal, gestos, expresiones faciales y contacto visual que ilustren y realcen su mensaje verbal. El mensaje que ves debe ser el mismo que oyes.
               </div>
-
               <div className="divide-y divide-slate-100">
                 {LC_FIELDS.map(field => (
                   <RadioGroup
                     key={field.key}
                     label={field.label}
-                    value={data.lc[field.key as keyof typeof data.lc] as string}
+                    value={activeInst.data.lc[field.key as keyof typeof activeInst.data.lc] as string}
                     options={field.options}
                     onChange={v => setLC(field.key as keyof EvalContextoData['lc'], v)}
                   />
                 ))}
               </div>
-
               <div className="mt-5 space-y-4 pt-4 border-t border-slate-100">
-                <Textarea
-                  label={t('contextLCDiferente')}
-                  value={data.lc.diferente}
-                  onChange={e => setLC('diferente', e.target.value)}
-                  rows={3}
-                  placeholder="Sugerencias de mejora en lenguaje corporal..."
-                />
-                <Textarea
-                  label={t('contextLCGusto')}
-                  value={data.lc.gusto}
-                  onChange={e => setLC('gusto', e.target.value)}
-                  rows={3}
-                  placeholder="Aspectos positivos del discurso..."
-                />
+                <Textarea label={t('contextLCDiferente')} value={activeInst.data.lc.diferente} onChange={e => setLC('diferente', e.target.value)} rows={3} placeholder="Sugerencias de mejora en lenguaje corporal..." />
+                <Textarea label={t('contextLCGusto')}     value={activeInst.data.lc.gusto}     onChange={e => setLC('gusto', e.target.value)}     rows={3} placeholder="Aspectos positivos del discurso..." />
               </div>
             </Card>
           )}
 
           {/* ── Organización del Discurso ── */}
-          {data.tipo === 'organizacion' && (
+          {activeInst.data.tipo === 'organizacion' && (
             <Card title={t('contextOrgTitle')}>
-              <div className="grid grid-cols-[1fr_1.5fr] gap-x-3 gap-y-0 text-xs font-semibold text-slate-500 uppercase tracking-wide pb-2 border-b border-slate-200 mb-1 hidden sm:grid">
+              <div className="grid grid-cols-[1fr_1.5fr] gap-x-3 text-xs font-semibold text-slate-500 uppercase tracking-wide pb-2 border-b border-slate-200 mb-1 hidden sm:grid">
                 <span>{t('contextOrgTable')}</span>
                 <span>Observaciones</span>
               </div>
@@ -477,12 +498,10 @@ export default function EvaluacionesContexto() {
                   >
                     <div className="text-sm font-medium text-slate-700 leading-snug pt-1">
                       {item.label}
-                      {item.hint && (
-                        <span className="block text-xs text-slate-400 font-normal mt-0.5">{item.hint}</span>
-                      )}
+                      {item.hint && <span className="block text-xs text-slate-400 font-normal mt-0.5">{item.hint}</span>}
                     </div>
                     <Textarea
-                      value={data.org[item.key]}
+                      value={activeInst.data.org[item.key]}
                       onChange={e => setOrg(item.key, e.target.value)}
                       rows={2}
                       placeholder="Observaciones..."

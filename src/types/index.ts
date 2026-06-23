@@ -72,7 +72,7 @@ export interface CampoPersonalizado {
   opciones?: string[]
 }
 
-// ── Context Evaluations ──────────────────────────────────────────────────────
+// ── Context Evaluations ─────────────────────────────────────────────────────
 
 export type EvalContextoTipo = 'variedad-vocal' | 'lenguaje-corporal' | 'organizacion'
 
@@ -134,4 +134,16 @@ export interface EvalContextoData {
     cierre: string
     mejor: string
   }
+}
+
+export interface EvalInstance {
+  id: string
+  createdAt: string
+  data: EvalContextoData
+}
+
+export interface EvalContextoStore {
+  instances: EvalInstance[]
+  activeId: string | null
+  reportId: string | null
 }

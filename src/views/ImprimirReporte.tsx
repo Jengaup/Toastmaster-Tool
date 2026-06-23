@@ -3,8 +3,8 @@ import { Printer, Copy, Check } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { TKey } from '../i18n'
-import { TimerRecord, AhParticipant, GrammarData, EvaluadorData, CampoPersonalizado, EvalContextoData } from '../types'
-import { DEFAULT_EVAL_CONTEXTO } from './EvaluacionesContexto'
+import { TimerRecord, AhParticipant, GrammarData, EvaluadorData, CampoPersonalizado, EvalContextoData, EvalContextoStore } from '../types'
+import { DEFAULT_EVAL_STORE } from './EvaluacionesContexto'
 import { STORAGE_KEYS } from '../utils/storage'
 import { formatTime } from '../utils/formatTime'
 import { copyToClipboard } from '../utils/export'
@@ -36,7 +36,11 @@ export default function ImprimirReporte() {
   const [gramData] = useLocalStorage<GrammarData>(STORAGE_KEYS.GRAMMAR_DATA, { palabraDelDia: '', definicion: '', observaciones: [], usosDelDia: {} })
   const [evalData] = useLocalStorage<EvaluadorData>(STORAGE_KEYS.EVALUADOR_DATA, { segmentos: [], checklist: [], resumenFinal: '' })
   const [campos] = useLocalStorage<CampoPersonalizado[]>(STORAGE_KEYS.CAMPOS_PERSONALIZADOS, [])
-  const [evalContexto] = useLocalStorage<EvalContextoData>(STORAGE_KEYS.EVAL_CONTEXTO, DEFAULT_EVAL_CONTEXTO)
+  const [rawEvalStore] = useLocalStorage<EvalContextoStore>(STORAGE_KEYS.EVAL_CONTEXTO, DEFAULT_EVAL_STORE)
+  const evalStore: EvalContextoStore = Array.isArray(rawEvalStore?.instances) ? rawEvalStore : DEFAULT_EVAL_STORE
+  const evalContexto: EvalContextoData | null = (
+    evalStore.instances.find(i => i.id === evalStore.reportId) ?? evalStore.instances[0]
+  )?.data ?? null
   const [copied, setCopied] = useState(false)
 
   const clubName = campos.find(c => c.etiqueta.toLowerCase().includes('club'))?.valor
@@ -112,7 +116,7 @@ export default function ImprimirReporte() {
       lines.push('')
     }
 
-    if (evalContexto.tipo) {
+    if (evalContexto?.tipo) {
       lines.push(t('printSectionContext').toUpperCase())
       lines.push('-'.repeat(30))
       const tipoLabel = evalContexto.tipo === 'variedad-vocal' ? t('contextVVTitle') : evalContexto.tipo === 'lenguaje-corporal' ? t('contextLCTitle') : t('contextOrgTitle')
@@ -357,7 +361,7 @@ export default function ImprimirReporte() {
         )}
 
         {/* Context Evaluation */}
-        {evalContexto.tipo && (
+        {evalContexto?.tipo && (
           <section>
             <SectionHeader>{t('printSectionContext')}</SectionHeader>
             <div className="space-y-4">
@@ -491,7 +495,7 @@ export default function ImprimirReporte() {
         )}
 
         {/* Empty state */}
-        {timerRecords.length === 0 && ahParticipants.length === 0 && !gramData.palabraDelDia && !evalData.resumenFinal && !evalContexto.tipo && (
+        {timerRecords.length === 0 && ahParticipants.length === 0 && !gramData.palabraDelDia && !evalData.resumenFinal && !evalContexto?.tipo && (
           <div className="bg-white rounded-xl border border-dashed border-slate-300 p-16 text-center text-slate-400 print:hidden">
             <Printer size={32} className="mx-auto mb-3 opacity-30" />
             <p className="font-medium">{t('printNoData')}</p>
