@@ -71,3 +71,67 @@ export interface CampoPersonalizado {
   valor: string
   opciones?: string[]
 }
+
+// ── Context Evaluations ──────────────────────────────────────────────────────
+
+export type EvalContextoTipo = 'variedad-vocal' | 'lenguaje-corporal' | 'organizacion'
+
+export type LCOption = 'bueno' | 'regular' | 'mejorar' | ''
+
+export interface VVRatings {
+  volumen_proyeccion: number
+  volumen_dinamico: number
+  inflexion_variado: number
+  inflexion_pleno: number
+  voz_abierta: number
+  voz_suave: number
+  voz_entusiasta: number
+  artic_clara: number
+  artic_pronunciacion: number
+  artic_pausas: number
+  cadencia_regular: number
+  cadencia_fluido: number
+  cadencia_variado: number
+  cadencia_deliberado: number
+  cadencia_fluido2: number
+  variedad_emocion: number
+  variedad_genial: number
+  variedad_natural: number
+}
+
+export interface EvalContextoData {
+  tipo: EvalContextoTipo | null
+  nombreOrador: string
+  evaluador: string
+  fecha: string
+  titulo: string
+  vv: {
+    destacaste: string
+    trabajar: string
+    desafio: string
+    ratings: VVRatings
+  }
+  lc: {
+    manera: LCOption
+    postura: LCOption
+    gestos: LCOption
+    movimiento: LCOption
+    contactoVisual: LCOption
+    expresionFacial: LCOption
+    general: LCOption
+    diferente: string
+    gusto: string
+  }
+  org: {
+    propGeneral: string
+    propEspecifico: string
+    cautivoTitulo: string
+    hiloConductor: string
+    puntos: string
+    ejemplos: string
+    transiciones: string
+    apertura: string
+    cierre: string
+    mejor: string
+  }
+}
