@@ -3,7 +3,8 @@ import { Printer, Copy, Check } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { TKey } from '../i18n'
-import { TimerRecord, AhParticipant, GrammarData, EvaluadorData, CampoPersonalizado } from '../types'
+import { TimerRecord, AhParticipant, GrammarData, EvaluadorData, CampoPersonalizado, EvalContextoData } from '../types'
+import { DEFAULT_EVAL_CONTEXTO } from './EvaluacionesContexto'
 import { STORAGE_KEYS } from '../utils/storage'
 import { formatTime } from '../utils/formatTime'
 import { copyToClipboard } from '../utils/export'
@@ -35,6 +36,7 @@ export default function ImprimirReporte() {
   const [gramData] = useLocalStorage<GrammarData>(STORAGE_KEYS.GRAMMAR_DATA, { palabraDelDia: '', definicion: '', observaciones: [], usosDelDia: {} })
   const [evalData] = useLocalStorage<EvaluadorData>(STORAGE_KEYS.EVALUADOR_DATA, { segmentos: [], checklist: [], resumenFinal: '' })
   const [campos] = useLocalStorage<CampoPersonalizado[]>(STORAGE_KEYS.CAMPOS_PERSONALIZADOS, [])
+  const [evalContexto] = useLocalStorage<EvalContextoData>(STORAGE_KEYS.EVAL_CONTEXTO, DEFAULT_EVAL_CONTEXTO)
   const [copied, setCopied] = useState(false)
 
   const clubName = campos.find(c => c.etiqueta.toLowerCase().includes('club'))?.valor
@@ -106,6 +108,25 @@ export default function ImprimirReporte() {
       if (evalData.resumenFinal) {
         lines.push(`\n${t('printFinalSummary')}:`)
         lines.push(evalData.resumenFinal)
+      }
+      lines.push('')
+    }
+
+    if (evalContexto.tipo) {
+      lines.push(t('printSectionContext').toUpperCase())
+      lines.push('-'.repeat(30))
+      const tipoLabel = evalContexto.tipo === 'variedad-vocal' ? t('contextVVTitle') : evalContexto.tipo === 'lenguaje-corporal' ? t('contextLCTitle') : t('contextOrgTitle')
+      lines.push(`${tipoLabel} — ${evalContexto.nombreOrador || '—'}`)
+      if (evalContexto.evaluador) lines.push(`${t('contextEvaluador')}: ${evalContexto.evaluador}`)
+      if (evalContexto.tipo === 'variedad-vocal') {
+        if (evalContexto.vv.destacaste) lines.push(`${t('contextVVDestacaste')} ${evalContexto.vv.destacaste}`)
+        if (evalContexto.vv.trabajar)   lines.push(`${t('contextVVTrabajar')} ${evalContexto.vv.trabajar}`)
+        if (evalContexto.vv.desafio)    lines.push(`${t('contextVVDesafio')} ${evalContexto.vv.desafio}`)
+      } else if (evalContexto.tipo === 'lenguaje-corporal') {
+        if (evalContexto.lc.diferente) lines.push(`${t('contextLCDiferente')}\n${evalContexto.lc.diferente}`)
+        if (evalContexto.lc.gusto)     lines.push(`${t('contextLCGusto')}\n${evalContexto.lc.gusto}`)
+      } else if (evalContexto.tipo === 'organizacion') {
+        Object.entries(evalContexto.org).filter(([, v]) => v).forEach(([, v]) => lines.push(`• ${v}`))
       }
       lines.push('')
     }
@@ -335,6 +356,120 @@ export default function ImprimirReporte() {
           </section>
         )}
 
+        {/* Context Evaluation */}
+        {evalContexto.tipo && (
+          <section>
+            <SectionHeader>{t('printSectionContext')}</SectionHeader>
+            <div className="space-y-4">
+              {/* Header info */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: evalContexto.tipo === 'variedad-vocal' ? t('contextVVTitle') : evalContexto.tipo === 'lenguaje-corporal' ? t('contextLCTitle') : t('contextOrgTitle'), value: '' },
+                  { label: t('reportName'), value: evalContexto.nombreOrador },
+                  { label: t('contextEvaluador'), value: evalContexto.evaluador },
+                  { label: 'Fecha', value: evalContexto.fecha },
+                ].map((item, i) => item.value !== undefined ? (
+                  <div key={i} className="bg-slate-50 rounded-lg p-3 print:border print:border-slate-200 print:bg-white">
+                    <div className="text-xs text-slate-500 font-medium">{item.label}</div>
+                    <div className="text-sm font-semibold text-slate-800 mt-0.5">{item.value || '—'}</div>
+                  </div>
+                ) : null)}
+              </div>
+
+              {/* VV */}
+              {evalContexto.tipo === 'variedad-vocal' && (
+                <div className="space-y-4">
+                  {/* Ratings summary */}
+                  <div>
+                    <div className="text-xs font-semibold text-slate-500 uppercase mb-2">{t('contextVVProfile')}</div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-200">
+                            <th className="text-left py-1.5 pr-4 text-slate-500 font-medium">{t('contextVVIneficaz')}</th>
+                            <th className="text-center py-1.5 px-1 text-slate-400 w-8">1</th>
+                            <th className="text-center py-1.5 px-1 text-slate-400 w-8">2</th>
+                            <th className="text-center py-1.5 px-1 text-slate-400 w-8">3</th>
+                            <th className="text-center py-1.5 px-1 text-slate-400 w-8">4</th>
+                            <th className="text-center py-1.5 px-1 text-slate-400 w-8">5</th>
+                            <th className="text-left py-1.5 pl-4 text-slate-500 font-medium">{t('contextVVEficaz')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Object.entries(evalContexto.vv.ratings).map(([key, val]) => (
+                            <tr key={key} className="border-b border-slate-100 last:border-0">
+                              <td className="py-1 pr-4 text-slate-500 font-medium capitalize">{key.replace(/_/g, ' ')}</td>
+                              {[1,2,3,4,5].map(n => (
+                                <td key={n} className="text-center py-1 px-1">
+                                  <span className={`inline-block w-5 h-5 rounded-full text-xs font-bold leading-5 ${
+                                    val === n
+                                      ? n <= 2 ? 'bg-red-500 text-white' : n === 3 ? 'bg-amber-500 text-white' : 'bg-green-600 text-white'
+                                      : 'bg-slate-100 text-slate-300'
+                                  }`}>{n}</span>
+                                </td>
+                              ))}
+                              <td />
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  {[
+                    { label: t('contextVVDestacaste'), value: evalContexto.vv.destacaste },
+                    { label: t('contextVVTrabajar'),   value: evalContexto.vv.trabajar },
+                    { label: t('contextVVDesafio'),    value: evalContexto.vv.desafio },
+                  ].filter(f => f.value).map((f, i) => (
+                    <div key={i}>
+                      <div className="text-xs font-semibold text-slate-500 uppercase mb-1">{f.label}</div>
+                      <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{f.value}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* LC */}
+              {evalContexto.tipo === 'lenguaje-corporal' && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {Object.entries(evalContexto.lc)
+                      .filter(([key]) => !['diferente', 'gusto'].includes(key))
+                      .map(([key, val]) => (
+                        <div key={key} className="bg-slate-50 rounded-lg p-3 print:border print:border-slate-200 print:bg-white">
+                          <div className="text-xs text-slate-500 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</div>
+                          <div className={`text-sm font-semibold mt-0.5 ${
+                            val === 'bueno' ? 'text-green-700' : val === 'regular' ? 'text-amber-700' : val === 'mejorar' ? 'text-red-700' : 'text-slate-400'
+                          }`}>{val || '—'}</div>
+                        </div>
+                      ))}
+                  </div>
+                  {[
+                    { label: t('contextLCDiferente'), value: evalContexto.lc.diferente },
+                    { label: t('contextLCGusto'),     value: evalContexto.lc.gusto },
+                  ].filter(f => f.value).map((f, i) => (
+                    <div key={i}>
+                      <div className="text-xs font-semibold text-slate-500 uppercase mb-1">{f.label}</div>
+                      <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{f.value}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Org */}
+              {evalContexto.tipo === 'organizacion' && (
+                <div className="space-y-3">
+                  {Object.entries(evalContexto.org).filter(([, v]) => v).map(([key, val]) => (
+                    <div key={key}>
+                      <div className="text-xs font-semibold text-slate-500 uppercase mb-1">{key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim()}</div>
+                      <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{val}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* Custom fields */}
         {campos.length > 0 && (
           <section>
@@ -356,7 +491,7 @@ export default function ImprimirReporte() {
         )}
 
         {/* Empty state */}
-        {timerRecords.length === 0 && ahParticipants.length === 0 && !gramData.palabraDelDia && !evalData.resumenFinal && (
+        {timerRecords.length === 0 && ahParticipants.length === 0 && !gramData.palabraDelDia && !evalData.resumenFinal && !evalContexto.tipo && (
           <div className="bg-white rounded-xl border border-dashed border-slate-300 p-16 text-center text-slate-400 print:hidden">
             <Printer size={32} className="mx-auto mb-3 opacity-30" />
             <p className="font-medium">{t('printNoData')}</p>

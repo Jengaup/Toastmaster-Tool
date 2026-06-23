@@ -15,7 +15,7 @@
 
   body {
     @apply bg-slate-50 text-slate-900;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
   }
 
   ::-webkit-scrollbar {
@@ -38,7 +38,7 @@
 
 @layer utilities {
   .font-timer {
-    font-family: 'SF Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
     font-variant-numeric: tabular-nums;
   }
 }
