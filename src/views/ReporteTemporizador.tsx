@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { Plus, Trash2, Download, Copy, Check, Pencil, X, ClipboardList } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useLanguage } from '../contexts/LanguageContext'
-import { TimerRecord, SPEECH_PRESETS } from '../types'
+import { TimerRecord, SPEECH_PRESETS, SpeechType, TimerConfig } from '../types'
 import { formatTime, parseTimeInput, secondsToInput } from '../utils/formatTime'
 import { exportTimerCSV, timerRecordsSummary, copyToClipboard } from '../utils/export'
 import { STORAGE_KEYS } from '../utils/storage'
+import { getPhase, getPhaseColor } from '../hooks/useTimer'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { Input, Select } from '../components/ui/Input'
@@ -23,12 +24,32 @@ function speechTypeBadge(tipo: string): SpeechBadgeVariant {
 
 function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
+const DEFAULT_TIMER_CONFIG: Record<SpeechType, TimerConfig> = {
+  preparado:      SPEECH_PRESETS.preparado,
+  'table-topics': SPEECH_PRESETS['table-topics'],
+  evaluacion:     SPEECH_PRESETS.evaluacion,
+  personalizado:  SPEECH_PRESETS.personalizado,
+}
+
+function speechTypeKey(tipoLabel: string): SpeechType | null {
+  const entry = Object.entries(SPEECH_PRESETS).find(([, p]) => p.label === tipoLabel)
+  return entry ? (entry[0] as SpeechType) : null
+}
+
 export default function ReporteTemporizador() {
   const { t } = useLanguage()
   const [records, setRecords] = useLocalStorage<TimerRecord[]>(STORAGE_KEYS.TIMER_RECORDS, [])
+  const [timerConfig] = useLocalStorage<Record<SpeechType, TimerConfig>>(STORAGE_KEYS.TIMER_CONFIG, DEFAULT_TIMER_CONFIG)
   const [form, setForm] = useState({ nombre: '', tipo: SPEECH_PRESETS.preparado.label, tiempoFinal: '', notas: '' })
   const [editId, setEditId] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+
+  const getTimeColor = (r: TimerRecord): string => {
+    const key = speechTypeKey(r.tipo)
+    if (!key) return '#94a3b8'
+    const cfg = timerConfig[key] ?? SPEECH_PRESETS[key]
+    return getPhaseColor(getPhase(r.tiempoFinal, cfg))
+  }
 
   const speechTypes = Object.values(SPEECH_PRESETS).map((p) => p.label).concat([t('other')])
 
@@ -166,7 +187,7 @@ export default function ReporteTemporizador() {
                       <Badge variant={speechTypeBadge(r.tipo)}>{r.tipo}</Badge>
                     </td>
                     <td className="px-5 py-3.5">
-                      <span className="font-timer font-bold text-slate-800 tabular-nums">{formatTime(r.tiempoFinal)}</span>
+                      <span className="font-timer font-bold tabular-nums" style={{ color: getTimeColor(r) }}>{formatTime(r.tiempoFinal)}</span>
                     </td>
                     <td className="px-5 py-3.5 text-slate-500 hidden md:table-cell max-w-xs truncate">
                       {r.notas || <span className="text-slate-300">—</span>}

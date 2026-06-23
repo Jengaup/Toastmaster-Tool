@@ -3,10 +3,11 @@ import { Printer, Copy, Check } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { TKey } from '../i18n'
-import { TimerRecord, AhParticipant, GrammarData, EvaluadorData, CampoPersonalizado, EvalContextoData, EvalContextoStore } from '../types'
+import { TimerRecord, AhParticipant, GrammarData, EvaluadorData, CampoPersonalizado, EvalContextoData, EvalContextoStore, SpeechType, TimerConfig, SPEECH_PRESETS } from '../types'
 import { DEFAULT_EVAL_STORE } from './EvaluacionesContexto'
 import { STORAGE_KEYS } from '../utils/storage'
 import { formatTime } from '../utils/formatTime'
+import { getPhase, getPhaseColor } from '../hooks/useTimer'
 import { copyToClipboard } from '../utils/export'
 import { Button } from '../components/ui/Button'
 
@@ -28,6 +29,18 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
   )
 }
 
+const DEFAULT_TIMER_CONFIG: Record<SpeechType, TimerConfig> = {
+  preparado:      SPEECH_PRESETS.preparado,
+  'table-topics': SPEECH_PRESETS['table-topics'],
+  evaluacion:     SPEECH_PRESETS.evaluacion,
+  personalizado:  SPEECH_PRESETS.personalizado,
+}
+
+function speechTypeKey(tipoLabel: string): SpeechType | null {
+  const entry = Object.entries(SPEECH_PRESETS).find(([, p]) => p.label === tipoLabel)
+  return entry ? (entry[0] as SpeechType) : null
+}
+
 export default function ImprimirReporte() {
   const { t } = useLanguage()
   const [timerRecords] = useLocalStorage<TimerRecord[]>(STORAGE_KEYS.TIMER_RECORDS, [])
@@ -36,6 +49,14 @@ export default function ImprimirReporte() {
   const [gramData] = useLocalStorage<GrammarData>(STORAGE_KEYS.GRAMMAR_DATA, { palabraDelDia: '', definicion: '', observaciones: [], usosDelDia: {} })
   const [evalData] = useLocalStorage<EvaluadorData>(STORAGE_KEYS.EVALUADOR_DATA, { segmentos: [], checklist: [], resumenFinal: '' })
   const [campos] = useLocalStorage<CampoPersonalizado[]>(STORAGE_KEYS.CAMPOS_PERSONALIZADOS, [])
+  const [timerConfig] = useLocalStorage<Record<SpeechType, TimerConfig>>(STORAGE_KEYS.TIMER_CONFIG, DEFAULT_TIMER_CONFIG)
+
+  const getTimeColor = (r: TimerRecord): string => {
+    const key = speechTypeKey(r.tipo)
+    if (!key) return '#94a3b8'
+    const cfg = timerConfig[key] ?? SPEECH_PRESETS[key]
+    return getPhaseColor(getPhase(r.tiempoFinal, cfg))
+  }
   const [rawEvalStore] = useLocalStorage<EvalContextoStore>(STORAGE_KEYS.EVAL_CONTEXTO, DEFAULT_EVAL_STORE)
   const evalStore: EvalContextoStore = Array.isArray(rawEvalStore?.instances) ? rawEvalStore : DEFAULT_EVAL_STORE
   const evalContexto: EvalContextoData | null = (
@@ -214,7 +235,7 @@ export default function ImprimirReporte() {
                       <td className="py-2 pr-4 text-slate-400 font-mono text-xs">{i + 1}</td>
                       <td className="py-2 pr-4 font-medium text-slate-800">{r.nombre}</td>
                       <td className="py-2 pr-4 text-slate-600 text-xs">{r.tipo}</td>
-                      <td className="py-2 pr-4 font-mono font-semibold text-slate-800">{formatTime(r.tiempoFinal)}</td>
+                      <td className="py-2 pr-4 font-mono font-semibold" style={{ color: getTimeColor(r) }}>{formatTime(r.tiempoFinal)}</td>
                       <td className="py-2 text-slate-500 text-xs hidden md:table-cell print:table-cell">{r.notas || '—'}</td>
                     </tr>
                   ))}
