@@ -147,3 +147,58 @@ export interface EvalContextoStore {
   activeId: string | null
   reportId: string | null
 }
+
+// ── Speech Evaluations (69 PDFs) ────────────────────────────────────────────
+
+export interface EvalCriterion {
+  id: string
+  label: string
+  description?: string
+}
+
+export interface EvalDiscursoDefinition {
+  id: string
+  fileId: string
+  title: string
+  lang: 'es' | 'en'
+  duration?: string
+  criteria: EvalCriterion[]
+}
+
+export interface EvalDiscursoHeader {
+  nombreOrador: string
+  fecha: string
+  evaluador: string
+  duracion: string
+  titulo: string
+}
+
+export interface EvalDiscursoComments {
+  destacaste: string
+  trabajar: string
+  desafio: string
+}
+
+export interface EvalDiscursoRating {
+  rating: number | null
+  comment: string
+}
+
+export interface EvalDiscursoData {
+  evaluacionId: string
+  header: EvalDiscursoHeader
+  comments: EvalDiscursoComments
+  ratings: Record<string, EvalDiscursoRating>
+}
+
+export interface EvalDiscursoInstance {
+  id: string
+  createdAt: string
+  data: EvalDiscursoData
+}
+
+export interface EvalDiscursoStore {
+  instances: EvalDiscursoInstance[]
+  activeId: string | null
+  reportId: string | null
+}

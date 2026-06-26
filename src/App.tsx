@@ -12,6 +12,7 @@ import EvaluadorGeneral from './views/EvaluadorGeneral'
 import DatosPersonalizados from './views/DatosPersonalizados'
 import ImprimirReporte from './views/ImprimirReporte'
 import EvaluacionesContexto from './views/EvaluacionesContexto'
+import EvaluacionDiscurso from './views/EvaluacionDiscurso'
 
 function AppInner() {
   const [locked, setLocked] = useState(() => hasPinEnabled() && !isSessionUnlocked())
@@ -30,6 +31,7 @@ function AppInner() {
           <Route path="/evaluador" element={<EvaluadorGeneral />} />
           <Route path="/personalizado" element={<DatosPersonalizados />} />
           <Route path="/evaluaciones" element={<EvaluacionesContexto />} />
+          <Route path="/eval-discurso" element={<EvaluacionDiscurso />} />
           <Route path="/imprimir" element={<ImprimirReporte />} />
         </Routes>
       </Layout>

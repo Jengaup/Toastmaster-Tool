@@ -3,8 +3,10 @@ import { Printer, Copy, Check } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { TKey } from '../i18n'
-import { TimerRecord, AhParticipant, GrammarData, EvaluadorData, CampoPersonalizado, EvalContextoData, EvalContextoStore, SpeechType, TimerConfig, SPEECH_PRESETS } from '../types'
+import { TimerRecord, AhParticipant, GrammarData, EvaluadorData, CampoPersonalizado, EvalContextoData, EvalContextoStore, SpeechType, TimerConfig, SPEECH_PRESETS, EvalDiscursoStore } from '../types'
 import { DEFAULT_EVAL_STORE } from './EvaluacionesContexto'
+import { DEFAULT_EVAL_DISCURSO_STORE } from './EvaluacionDiscurso'
+import { EVALUACIONES } from '../data/evaluaciones'
 import { STORAGE_KEYS } from '../utils/storage'
 import { formatTime } from '../utils/formatTime'
 import { getPhase, getPhaseColor } from '../hooks/useTimer'
@@ -57,6 +59,10 @@ export default function ImprimirReporte() {
     const cfg = timerConfig[key] ?? SPEECH_PRESETS[key]
     return getPhaseColor(getPhase(r.tiempoFinal, cfg))
   }
+  const [rawDiscursoStore] = useLocalStorage<EvalDiscursoStore>(STORAGE_KEYS.EVAL_DISCURSO, DEFAULT_EVAL_DISCURSO_STORE)
+  const discursoStore: EvalDiscursoStore = Array.isArray(rawDiscursoStore?.instances) ? rawDiscursoStore : DEFAULT_EVAL_DISCURSO_STORE
+  const discursoInstance = discursoStore.instances.find(i => i.id === discursoStore.reportId) ?? discursoStore.instances[0] ?? null
+
   const [rawEvalStore] = useLocalStorage<EvalContextoStore>(STORAGE_KEYS.EVAL_CONTEXTO, DEFAULT_EVAL_STORE)
   const evalStore: EvalContextoStore = Array.isArray(rawEvalStore?.instances) ? rawEvalStore : DEFAULT_EVAL_STORE
   const evalContexto: EvalContextoData | null = (
@@ -494,6 +500,87 @@ export default function ImprimirReporte() {
             </div>
           </section>
         )}
+
+        {/* Speech Evaluation */}
+        {discursoInstance && (() => {
+          const def = EVALUACIONES.find(e => e.id === discursoInstance.data.evaluacionId)
+          if (!def) return null
+          const d = discursoInstance.data
+          const RATING_LABELS = ['', 'Developing', 'Emerging', 'Accomplished', 'Excels', 'Exemplar']
+          const hasAnyRating = Object.values(d.ratings).some(r => r.rating !== null)
+          const hasComments = d.comments.destacaste || d.comments.trabajar || d.comments.desafio
+          if (!hasAnyRating && !hasComments) return null
+          return (
+            <section key="speech-eval">
+              <SectionHeader>{t('printSectionSpeechEval')}</SectionHeader>
+              <div className="space-y-4">
+                <div className="text-sm font-semibold text-slate-700">{def.title}{def.duration ? ` · ${def.duration}` : ''}</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { label: t('speechEvalNombreOrador'), value: d.header.nombreOrador },
+                    { label: t('speechEvalFecha'),        value: d.header.fecha },
+                    { label: t('speechEvalEvaluador'),    value: d.header.evaluador },
+                    { label: t('speechEvalTitulo'),       value: d.header.titulo },
+                  ].map((item, i) => (
+                    <div key={i} className="bg-slate-50 rounded-lg p-3 print:border print:border-slate-200 print:bg-white">
+                      <div className="text-xs text-slate-500 font-medium">{item.label}</div>
+                      <div className="text-sm font-semibold text-slate-800 mt-0.5">{item.value || '—'}</div>
+                    </div>
+                  ))}
+                </div>
+                {hasComments && (
+                  <div className="space-y-2">
+                    {[
+                      { label: t('speechEvalDestacaste'), value: d.comments.destacaste },
+                      { label: t('speechEvalTrabajar'),   value: d.comments.trabajar },
+                      { label: t('speechEvalDesafio'),    value: d.comments.desafio },
+                    ].filter(f => f.value).map((f, i) => (
+                      <div key={i}>
+                        <div className="text-xs font-semibold text-slate-500 uppercase mb-1">{f.label}</div>
+                        <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{f.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {hasAnyRating && (
+                  <div>
+                    <div className="text-xs font-semibold text-slate-500 uppercase mb-2">{t('speechEvalCriteria')}</div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm border-collapse">
+                        <thead>
+                          <tr className="border-b-2 border-slate-200">
+                            <th className="text-left py-2 pr-4 text-xs font-semibold text-slate-500 uppercase">Criterio</th>
+                            <th className="text-center py-2 px-2 text-xs font-semibold text-slate-500 uppercase w-24">Nivel</th>
+                            <th className="text-left py-2 pl-2 text-xs font-semibold text-slate-500 uppercase">Comentario</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {def.criteria.map(c => {
+                            const r = d.ratings[c.id]
+                            if (!r?.rating && !r?.comment) return null
+                            return (
+                              <tr key={c.id} className="border-b border-slate-100">
+                                <td className="py-2 pr-4 font-medium text-slate-800">{c.label}</td>
+                                <td className="py-2 px-2 text-center">
+                                  {r.rating ? (
+                                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${r.rating >= 4 ? 'bg-green-100 text-green-700' : r.rating === 3 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                                      {r.rating} — {RATING_LABELS[r.rating]}
+                                    </span>
+                                  ) : '—'}
+                                </td>
+                                <td className="py-2 pl-2 text-slate-500 text-xs">{r.comment || '—'}</td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+          )
+        })()}
 
         {/* Custom fields */}
         {campos.length > 0 && (

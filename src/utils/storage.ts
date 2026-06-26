@@ -33,4 +33,5 @@ export const STORAGE_KEYS = {
   EVALUADOR_DATA: 'tm_evaluador_data',
   CAMPOS_PERSONALIZADOS: 'tm_campos_personalizados',
   EVAL_CONTEXTO: 'tm_eval_contexto',
+  EVAL_DISCURSO: 'tm_eval_discurso',
 } as const
