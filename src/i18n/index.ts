@@ -227,7 +227,7 @@ const translations = {
     pinRemoved: '✓ PIN eliminado',
 
     // Context Evaluations
-    navContextEval: 'Evaluaciones',
+    navContextEval: 'Evaluaciones de Contexto',
     contextTitle: 'Evaluaciones de Contexto',
     contextSubtitle: 'Selecciona y completa una evaluación especializada para el discurso',
     contextChooseEval: 'Elige una evaluación para esta sesión',
@@ -481,7 +481,7 @@ const translations = {
     pinRemoved: '✓ PIN removed',
 
     // Context Evaluations
-    navContextEval: 'Evaluations',
+    navContextEval: 'Context Evaluations',
     contextTitle: 'Context Evaluations',
     contextSubtitle: 'Select and complete a specialized speech evaluation',
     contextChooseEval: 'Choose an evaluation for this session',
