@@ -49,7 +49,6 @@ export default function EvaluacionDiscurso() {
 
   const [showPicker, setShowPicker] = useState(false)
   const [search, setSearch] = useState('')
-  const [langFilter, setLangFilter] = useState<'all' | 'es' | 'en'>('all')
   const [expandedCriteria, setExpandedCriteria] = useState<Record<string, boolean>>({})
 
   const activeInstance = store.instances.find(i => i.id === store.activeId) ?? null
@@ -59,11 +58,10 @@ export default function EvaluacionDiscurso() {
   const filteredEvals = useMemo(() => {
     const q = search.toLowerCase()
     return EVALUACIONES.filter(e => {
-      if (langFilter !== 'all' && e.lang !== langFilter) return false
       if (q && !e.title.toLowerCase().includes(q)) return false
       return true
     })
-  }, [search, langFilter])
+  }, [search])
 
   const createInstance = (evaluacionId: string) => {
     const inst: EvalDiscursoInstance = { id: newId(), createdAt: new Date().toISOString(), data: emptyData(evaluacionId) }
@@ -157,17 +155,8 @@ export default function EvaluacionDiscurso() {
                   autoFocus
                 />
               </div>
-              <div className="flex gap-1.5">
-                {(['all', 'es', 'en'] as const).map(f => (
-                  <button
-                    key={f}
-                    onClick={() => setLangFilter(f)}
-                    className={`px-3 py-1 text-xs rounded-full font-medium transition-colors border ${langFilter === f ? 'bg-purple-600 text-white border-purple-600' : 'text-slate-500 border-slate-200 hover:border-purple-300 hover:text-purple-600'}`}
-                  >
-                    {f === 'all' ? t('speechEvalAll') : f === 'es' ? t('speechEvalLangES') : t('speechEvalLangEN')}
-                  </button>
-                ))}
-                <span className="ml-auto text-xs text-slate-400 self-center">{filteredEvals.length} evaluaciones</span>
+              <div className="flex justify-end">
+                <span className="text-xs text-slate-400">{filteredEvals.length} evaluaciones</span>
               </div>
             </div>
 
