@@ -12,6 +12,7 @@ export interface MeetingSegment {
   label: string
   startedAt: number | null
   accumulated: number
+  targetSecs?: number
 }
 
 const DEFAULT_CLOCK: MeetingClockState = {
@@ -52,6 +53,7 @@ interface MeetingClockCtx {
   segmentElapsedMs: (seg: MeetingSegment) => number
   toggleSegment: (id: string) => void
   resetSegment: (id: string) => void
+  setSegmentTarget: (id: string, secs: number) => void
   addSegment: (label: string) => void
   deleteSegment: (id: string) => void
   resetAll: () => void
@@ -115,6 +117,9 @@ export function MeetingClockProvider({ children }: { children: ReactNode }) {
   const resetSegment = (id: string) =>
     saveSegments(segments.map(s => s.id === id ? { ...s, startedAt: null, accumulated: 0 } : s))
 
+  const setSegmentTarget = (id: string, secs: number) =>
+    saveSegments(segments.map(s => s.id === id ? { ...s, targetSecs: secs > 0 ? secs : undefined } : s))
+
   const addSegment = (label: string) => {
     const seg: MeetingSegment = { id: 'seg_' + Date.now().toString(36), label, startedAt: null, accumulated: 0 }
     saveSegments([...segments, seg])
@@ -134,7 +139,7 @@ export function MeetingClockProvider({ children }: { children: ReactNode }) {
       clock, segments, clockElapsedMs, totalMs, remainingMs,
       isRunning, isOver,
       startMeeting, pauseMeeting, resetMeeting, setDuration,
-      segmentElapsedMs, toggleSegment, resetSegment, addSegment, deleteSegment, resetAll, loadStandardAgenda,
+      segmentElapsedMs, toggleSegment, resetSegment, setSegmentTarget, addSegment, deleteSegment, resetAll, loadStandardAgenda,
     }}>
       {children}
     </MeetingClockContext.Provider>
