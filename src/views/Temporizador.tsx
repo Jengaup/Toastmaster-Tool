@@ -362,13 +362,15 @@ export default function Temporizador() {
                     >
                       <RotateCcw size={11} />
                     </button>
-                    <button
-                      onClick={() => deleteSegment(seg.id)}
-                      title={t('delete')}
-                      className="p-1 text-slate-300 hover:text-red-500 rounded transition-colors shrink-0"
-                    >
-                      <X size={11} />
-                    </button>
+                    {seg.id.startsWith('seg_') && (
+                      <button
+                        onClick={() => deleteSegment(seg.id)}
+                        title={t('delete')}
+                        className="p-1 text-slate-300 hover:text-red-500 rounded transition-colors shrink-0"
+                      >
+                        <X size={11} />
+                      </button>
+                    )}
                   </div>
                   {/* Progress bar when target is set */}
                   {hasTarget && (elapsedSecs > 0 || active) && (
