@@ -171,6 +171,9 @@ const translations = {
     // Evaluator
     evalTitle: 'Evaluador general',
     evalSubtitle: 'Notas y checklist para la evaluación de la reunión',
+    evalRolesRef: 'Roles de la reunión',
+    evalRolesEmpty: 'Sin roles asignados',
+    evalRolesEmptyHint: 'Ve a "Roles" para registrar los miembros de hoy',
     evalCopyBtn: 'Copiar resumen',
     evalChecklistTitle: 'Checklist rápida',
     evalCompleted: 'completados',
@@ -525,6 +528,9 @@ const translations = {
     // Evaluator
     evalTitle: 'General Evaluator',
     evalSubtitle: 'Notes and checklist for meeting evaluation',
+    evalRolesRef: 'Meeting roles',
+    evalRolesEmpty: 'No roles assigned',
+    evalRolesEmptyHint: 'Go to "Roles" to register today\'s members',
     evalCopyBtn: 'Copy summary',
     evalChecklistTitle: 'Quick checklist',
     evalCompleted: 'completed',
