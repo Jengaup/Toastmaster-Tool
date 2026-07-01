@@ -34,7 +34,7 @@ const PHASE_VARIANTS = {
 } as const
 
 export default function Temporizador() {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const { elapsed, isRunning, start, pause, reset } = useTimer()
   const [speechType, setSpeechType] = useState<SpeechType>('preparado')
   const [config, setConfig] = useLocalStorage<Record<SpeechType, TimerConfig>>(STORAGE_KEYS.TIMER_CONFIG, {
@@ -125,7 +125,7 @@ export default function Temporizador() {
       tipo: speechLabels[speechType],
       tiempoFinal: elapsed,
       notas: '',
-      fecha: new Date().toLocaleDateString('es-ES'),
+      fecha: new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US'),
     }
     setRecords((prev) => [...prev, record])
     setSavedFeedback(true)

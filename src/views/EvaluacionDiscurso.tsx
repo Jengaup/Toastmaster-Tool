@@ -162,7 +162,7 @@ export default function EvaluacionDiscurso() {
 
             <div className="overflow-y-auto flex-1 px-4 py-3 space-y-1">
               {filteredEvals.length === 0 ? (
-                <p className="text-center text-slate-400 py-8 text-sm">Sin resultados</p>
+                <p className="text-center text-slate-400 py-8 text-sm">{t('noResults')}</p>
               ) : filteredEvals.map(ev => (
                 <button
                   key={ev.id}

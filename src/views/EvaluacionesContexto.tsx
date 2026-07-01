@@ -278,7 +278,7 @@ export default function EvaluacionesContexto() {
 
       {/* ── Nueva evaluación ── */}
       <div className="mb-6">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Nueva evaluación</p>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">{t('contextNewEval')}</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {EVAL_OPTIONS.map(opt => {
             const meta = TIPO_CLASSES[opt.tipo]
@@ -305,7 +305,7 @@ export default function EvaluacionesContexto() {
 
       {/* ── Evaluaciones guardadas ── */}
       {store.instances.length > 0 && (
-        <Card title={`Evaluaciones guardadas (${store.instances.length})`} className="mb-6">
+        <Card title={`${t('speechEvalSaved')} (${store.instances.length})`} className="mb-6">
           <div className="-mx-5 divide-y divide-slate-100">
             {store.instances.map(inst => {
               const meta = TIPO_CLASSES[inst.data.tipo!]
@@ -331,18 +331,18 @@ export default function EvaluacionesContexto() {
                         {label}
                       </div>
                       {isReport && (
-                        <div className="text-xs text-indigo-500 font-medium">Para reporte</div>
+                        <div className="text-xs text-indigo-500 font-medium">{t('contextForReport')}</div>
                       )}
                     </div>
                     {isActive && (
                       <span className="ml-auto shrink-0 text-xs bg-indigo-100 text-indigo-700 font-semibold px-2 py-0.5 rounded-full">
-                        Activa
+                        {t('contextActive')}
                       </span>
                     )}
                   </button>
                   <div className="flex items-center gap-0.5 pr-4 shrink-0">
                     <button
-                      title={isReport ? 'Quitar del reporte' : 'Usar en reporte'}
+                      title={isReport ? t('contextRemoveReport') : t('speechEvalUseReport')}
                       onClick={() => toggleReport(inst.id)}
                       className={`p-1.5 rounded-lg transition-colors ${
                         isReport
@@ -353,7 +353,7 @@ export default function EvaluacionesContexto() {
                       {isReport ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
                     </button>
                     <button
-                      title="Eliminar"
+                      title={t('delete')}
                       onClick={() => deleteInst(inst.id)}
                       className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                     >
@@ -373,7 +373,7 @@ export default function EvaluacionesContexto() {
           {/* Editing header */}
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs text-slate-400 uppercase tracking-wide font-semibold">Editando</p>
+              <p className="text-xs text-slate-400 uppercase tracking-wide font-semibold">{t('contextEditing')}</p>
               <p className="text-sm font-bold text-slate-800">{instanceLabel(activeInst, store.instances)}</p>
             </div>
             <button
@@ -385,7 +385,7 @@ export default function EvaluacionesContexto() {
               }`}
             >
               {store.reportId === activeInst.id ? <BookmarkCheck size={13} /> : <Bookmark size={13} />}
-              {store.reportId === activeInst.id ? 'Para reporte' : 'Usar en reporte'}
+              {store.reportId === activeInst.id ? t('contextForReport') : t('speechEvalUseReport')}
             </button>
           </div>
 
@@ -463,7 +463,7 @@ export default function EvaluacionesContexto() {
             <Card title={t('contextLCTitle')}>
               <div className="bg-sky-50 border border-sky-200 rounded-lg p-3 mb-5 text-xs text-sky-700 leading-relaxed">
                 <span className="font-semibold">{t('contextLCNote')}: </span>
-                El orador debe usar la postura, movimiento corporal, gestos, expresiones faciales y contacto visual que ilustren y realcen su mensaje verbal. El mensaje que ves debe ser el mismo que oyes.
+                {t('contextLCNoteText')}
               </div>
               <div className="divide-y divide-slate-100">
                 {LC_FIELDS.map(field => (
@@ -488,7 +488,7 @@ export default function EvaluacionesContexto() {
             <Card title={t('contextOrgTitle')}>
               <div className="grid grid-cols-[1fr_1.5fr] gap-x-3 text-xs font-semibold text-slate-500 uppercase tracking-wide pb-2 border-b border-slate-200 mb-1 hidden sm:grid">
                 <span>{t('contextOrgTable')}</span>
-                <span>Observaciones</span>
+                <span>{t('contextObservations')}</span>
               </div>
               <div className="space-y-1">
                 {ORG_ITEMS.map(item => (
