@@ -63,7 +63,7 @@ export default function Temporizador() {
   const {
     clock, clockElapsedMs, totalMs, remainingMs, isRunning: meetingRunning, isOver,
     startMeeting, pauseMeeting, resetMeeting, setDuration,
-    segments, segmentElapsedMs, toggleSegment, resetSegment, addSegment, deleteSegment, loadStandardAgenda,
+    segments, segmentElapsedMs, toggleSegment, resetSegment, setSegmentTarget, addSegment, deleteSegment, loadStandardAgenda,
   } = useMeetingClock()
   const [showMeeting, setShowMeeting] = useLocalStorage('tm_ui_panel_meeting', true)
   const [showSegments, setShowSegments] = useLocalStorage('tm_ui_panel_segments', false)
@@ -300,45 +300,87 @@ export default function Temporizador() {
             {segments.map(seg => {
               const elapsedSecs = Math.floor(segmentElapsedMs(seg) / 1000)
               const active = seg.startedAt !== null
+              const target = seg.targetSecs ?? 0
+              const hasTarget = target > 0
+              const remaining = target - elapsedSecs
+              const isSegOver = hasTarget && elapsedSecs > target
+              const pct = hasTarget ? Math.min(elapsedSecs / target, 1) : 0
+
+              const timeDisplay = hasTarget
+                ? isSegOver
+                  ? `+${formatTime(elapsedSecs - target)}`
+                  : formatTime(Math.max(0, remaining))
+                : formatTime(elapsedSecs)
+
+              const timeColor = hasTarget
+                ? isSegOver
+                  ? 'text-red-500 font-bold'
+                  : remaining < target * 0.2
+                    ? 'text-amber-500 font-bold'
+                    : active ? 'text-indigo-600 font-bold' : 'text-slate-600'
+                : active ? 'text-indigo-600 font-bold' : elapsedSecs > 0 ? 'text-slate-600' : 'text-slate-300'
+
               return (
                 <div
                   key={seg.id}
-                  className={`flex items-center gap-3 px-5 py-2.5 border-b border-slate-50 last:border-0 transition-colors ${
-                    active ? 'bg-indigo-50/70' : ''
-                  }`}
+                  className={`border-b border-slate-50 last:border-0 transition-colors ${active ? 'bg-indigo-50/70' : ''}`}
                 >
-                  <button
-                    onClick={() => toggleSegment(seg.id)}
-                    className={`p-1.5 rounded-lg transition-colors shrink-0 ${
-                      active
-                        ? 'bg-indigo-500 text-white hover:bg-indigo-600'
-                        : 'bg-slate-100 text-slate-600 hover:bg-indigo-100 hover:text-indigo-600'
-                    }`}
-                  >
-                    {active ? <Pause size={11} fill="currentColor" /> : <Play size={11} fill="currentColor" />}
-                  </button>
-                  <span className={`flex-1 text-sm truncate ${active ? 'font-semibold text-indigo-700' : 'text-slate-700'}`}>
-                    {seg.label}
-                  </span>
-                  <span className={`font-mono text-sm shrink-0 ${
-                    active ? 'text-indigo-600 font-bold' : elapsedSecs > 0 ? 'text-slate-600' : 'text-slate-300'
-                  }`}>
-                    {formatTime(elapsedSecs)}
-                  </span>
-                  <button
-                    onClick={() => resetSegment(seg.id)}
-                    title={t('meetingReset')}
-                    className="p-1 text-slate-300 hover:text-slate-500 rounded transition-colors shrink-0"
-                  >
-                    <RotateCcw size={11} />
-                  </button>
-                  <button
-                    onClick={() => deleteSegment(seg.id)}
-                    title={t('delete')}
-                    className="p-1 text-slate-300 hover:text-red-500 rounded transition-colors shrink-0"
-                  >
-                    <X size={11} />
-                  </button>
+                  <div className="flex items-center gap-3 px-5 py-2.5">
+                    <button
+                      onClick={() => toggleSegment(seg.id)}
+                      className={`p-1.5 rounded-lg transition-colors shrink-0 ${
+                        active
+                          ? 'bg-indigo-500 text-white hover:bg-indigo-600'
+                          : 'bg-slate-100 text-slate-600 hover:bg-indigo-100 hover:text-indigo-600'
+                      }`}
+                    >
+                      {active ? <Pause size={11} fill="currentColor" /> : <Play size={11} fill="currentColor" />}
+                    </button>
+                    <span className={`flex-1 text-sm truncate ${active ? 'font-semibold text-indigo-700' : 'text-slate-700'}`}>
+                      {seg.label}
+                    </span>
+                    {/* Target duration input */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <input
+                        type="number"
+                        min={0}
+                        max={120}
+                        value={target > 0 ? Math.round(target / 60) : ''}
+                        onChange={e => setSegmentTarget(seg.id, (parseInt(e.target.value) || 0) * 60)}
+                        placeholder="–"
+                        className="w-9 text-center text-xs font-mono border border-slate-200 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-indigo-300 text-slate-500 placeholder-slate-300"
+                      />
+                      <span className="text-xs text-slate-300">m</span>
+                    </div>
+                    <span className={`font-mono text-sm shrink-0 min-w-[3.5rem] text-right ${timeColor}`}>
+                      {timeDisplay}
+                    </span>
+                    <button
+                      onClick={() => resetSegment(seg.id)}
+                      title={t('meetingReset')}
+                      className="p-1 text-slate-300 hover:text-slate-500 rounded transition-colors shrink-0"
+                    >
+                      <RotateCcw size={11} />
+                    </button>
+                    <button
+                      onClick={() => deleteSegment(seg.id)}
+                      title={t('delete')}
+                      className="p-1 text-slate-300 hover:text-red-500 rounded transition-colors shrink-0"
+                    >
+                      <X size={11} />
+                    </button>
+                  </div>
+                  {/* Progress bar when target is set */}
+                  {hasTarget && (elapsedSecs > 0 || active) && (
+                    <div className="mx-5 mb-2 h-1 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          isSegOver ? 'bg-red-400' : remaining < target * 0.2 ? 'bg-amber-400' : 'bg-indigo-400'
+                        }`}
+                        style={{ width: `${pct * 100}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
               )
             })}
