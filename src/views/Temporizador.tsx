@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Play, Pause, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Check, Maximize2, Minimize2, Clock, LayoutList, X } from 'lucide-react'
+import { Play, Pause, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Check, Maximize2, Minimize2, Clock, LayoutList, X, AlertTriangle } from 'lucide-react'
 import { useTimer, getPhase, getPhaseColor } from '../hooks/useTimer'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -57,9 +57,11 @@ export default function Temporizador() {
     startMeeting, pauseMeeting, resetMeeting, setDuration,
     segments, segmentElapsedMs, toggleSegment, resetSegment, addSegment, deleteSegment,
   } = useMeetingClock()
-  const [showMeeting, setShowMeeting] = useState(true)
-  const [showSegments, setShowSegments] = useState(false)
+  const [showMeeting, setShowMeeting] = useLocalStorage('tm_ui_panel_meeting', true)
+  const [showSegments, setShowSegments] = useLocalStorage('tm_ui_panel_segments', false)
   const [newSegLabel, setNewSegLabel] = useState('')
+  const [confirmReset, setConfirmReset] = useState(false)
+  const confirmResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const meetingActive = meetingRunning || clock.pausedElapsed > 0
 
@@ -77,6 +79,18 @@ export default function Temporizador() {
     return () => document.removeEventListener('fullscreenchange', handler)
   }, [])
 
+  const saveRef = useRef<() => void>(() => {})
+  const handleReset = useCallback(() => {
+    if (elapsed > 0 && !confirmReset) {
+      setConfirmReset(true)
+      if (confirmResetTimer.current) clearTimeout(confirmResetTimer.current)
+      confirmResetTimer.current = setTimeout(() => setConfirmReset(false), 3000)
+      return
+    }
+    reset()
+    setConfirmReset(false)
+  }, [elapsed, confirmReset, reset])
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName
@@ -85,14 +99,16 @@ export default function Temporizador() {
         e.preventDefault()
         isRunning ? pause() : start()
       } else if (e.code === 'KeyR') {
-        reset()
+        handleReset()
+      } else if (e.code === 'KeyS') {
+        saveRef.current()
       } else if (e.code === 'KeyF') {
         toggleFullscreen()
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [isRunning, start, pause, reset, toggleFullscreen])
+  }, [isRunning, start, pause, handleReset, toggleFullscreen])
 
   const speechLabels: Record<SpeechType, string> = {
     preparado: t('speechPrepared'),
@@ -106,6 +122,7 @@ export default function Temporizador() {
     verde:    t('timerPhaseGreen'),
     amarillo: t('timerPhaseYellow'),
     rojo:     t('timerPhaseRed'),
+    excedido: t('timerPhaseRed'),
   }
 
   const currentConfig = config[speechType]
@@ -130,11 +147,11 @@ export default function Temporizador() {
     reset()
   }
 
-  const saveToRecord = () => {
+  const saveToRecord = useCallback(() => {
     if (elapsed === 0) return
     const record: TimerRecord = {
       id: newId(),
-      nombre: speakerName.trim() || 'Sin nombre',
+      nombre: speakerName.trim() || t('timerUnnamed'),
       tipo: speechLabels[speechType],
       tiempoFinal: elapsed,
       notas: '',
@@ -142,8 +159,12 @@ export default function Temporizador() {
     }
     setRecords((prev) => [...prev, record])
     setSavedFeedback(true)
+    setSpeakerName('')
     setTimeout(() => setSavedFeedback(false), 2000)
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [elapsed, speakerName, speechType, lang])
+
+  useEffect(() => { saveRef.current = saveToRecord }, [saveToRecord])
 
   const startVariant = PHASE_VARIANTS[phase]
 
@@ -450,6 +471,14 @@ export default function Temporizador() {
           {phaseLabels[phase]}
         </div>
 
+        {/* PAUSED indicator */}
+        {!isRunning && elapsed > 0 && (
+          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 bg-amber-100 px-3 py-1 rounded-full animate-pulse">
+            <Pause size={10} fill="currentColor" />
+            {t('timerPaused')}
+          </div>
+        )}
+
         {/* Controls */}
         <div className="flex gap-3">
           {!isRunning ? (
@@ -471,8 +500,13 @@ export default function Temporizador() {
               {t('timerPause')}
             </Button>
           )}
-          <Button variant="secondary" size="xl" icon={<RotateCcw size={isFullscreen ? 26 : 22} />} onClick={reset}>
-            {t('timerReset')}
+          <Button
+            variant={confirmReset ? 'danger' : 'secondary'}
+            size="xl"
+            icon={confirmReset ? <AlertTriangle size={isFullscreen ? 26 : 22} /> : <RotateCcw size={isFullscreen ? 26 : 22} />}
+            onClick={handleReset}
+          >
+            {confirmReset ? t('timerConfirmReset') : t('timerReset')}
           </Button>
         </div>
 
@@ -492,7 +526,7 @@ export default function Temporizador() {
           {!isFullscreen && (
             <button
               onClick={toggleFullscreen}
-              title="Pantalla completa (F)"
+              title={t('timerFullscreen')}
               className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-700 px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors"
             >
               <Maximize2 size={13} />
@@ -534,7 +568,7 @@ export default function Temporizador() {
 
         {showConfig && (
           <div className="px-5 pb-5 border-t border-slate-100">
-            <div className="grid grid-cols-3 gap-4 pt-4">
+            <div key={speechType} className="grid grid-cols-3 gap-4 pt-4">
               <Input
                 label={t('timerConfigGreenLabel')}
                 defaultValue={secondsToInput(currentConfig.greenTime)}

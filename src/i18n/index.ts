@@ -219,7 +219,11 @@ const translations = {
     printType: 'Tipo',
     printTotal: 'Total',
     printShortcuts: 'Atajos de teclado',
-    timerShortcutHint: '⎵ Iniciar / Pausar   ·   R Reiniciar   ·   F Pantalla completa',
+    timerUnnamed: 'Sin nombre',
+    timerFullscreen: 'Pantalla completa (F)',
+    timerPaused: 'PAUSADO',
+    timerConfirmReset: '¿Reiniciar?',
+    timerShortcutHint: '⎵ Iniciar / Pausar   ·   R Reiniciar   ·   S Guardar   ·   F Pantalla completa',
 
     // New session
     newSession: 'Nueva sesión',
@@ -540,7 +544,11 @@ const translations = {
     printType: 'Type',
     printTotal: 'Total',
     printShortcuts: 'Keyboard shortcuts',
-    timerShortcutHint: '⎵ Start / Pause   ·   R Reset   ·   F Fullscreen',
+    timerUnnamed: 'Unnamed',
+    timerFullscreen: 'Fullscreen (F)',
+    timerPaused: 'PAUSED',
+    timerConfirmReset: 'Reset?',
+    timerShortcutHint: '⎵ Start / Pause   ·   R Reset   ·   S Save   ·   F Fullscreen',
 
     // New session
     newSession: 'New session',
