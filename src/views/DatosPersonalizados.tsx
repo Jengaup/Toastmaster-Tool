@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button'
 import { Input, Select, Textarea } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
+import { PageHeader } from '../components/ui/PageHeader'
 
 function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
@@ -80,17 +81,15 @@ export default function DatosPersonalizados() {
 
   return (
     <div className="p-4 md:p-8 max-w-3xl mx-auto">
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t('customTitle')}</h1>
-          <p className="text-slate-500 text-sm mt-1">{t('customSubtitle')}</p>
-        </div>
-        {!showForm && (
+      <PageHeader
+        title={t('customTitle')}
+        subtitle={t('customSubtitle')}
+        action={!showForm ? (
           <Button variant="primary" size="sm" icon={<Plus size={16} />} onClick={() => setShowForm(true)}>
             {t('customNewField')}
           </Button>
-        )}
-      </div>
+        ) : undefined}
+      />
 
       {showForm && (
         <Card title={editId ? t('customEditField') : t('customNewField')} className="mb-6">

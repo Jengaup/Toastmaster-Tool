@@ -11,6 +11,7 @@ import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { Input, Select } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
+import { PageHeader } from '../components/ui/PageHeader'
 
 type SpeechBadgeVariant = 'violet' | 'pink' | 'info' | 'neutral'
 
@@ -97,20 +98,20 @@ export default function ReporteTemporizador() {
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t('reportTitle')}</h1>
-          <p className="text-slate-500 text-sm mt-1">{t('reportSubtitle')}</p>
-        </div>
-        <div className="flex gap-2 shrink-0">
-          <Button variant="secondary" size="sm" icon={copied ? <Check size={14} /> : <Copy size={14} />} onClick={handleCopy}>
-            {copied ? t('copied') : t('copy')}
-          </Button>
-          <Button variant="secondary" size="sm" icon={<Download size={14} />} onClick={() => exportTimerCSV(records)}>
-            {t('csv')}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={t('reportTitle')}
+        subtitle={t('reportSubtitle')}
+        action={
+          <div className="flex gap-2">
+            <Button variant="secondary" size="sm" icon={copied ? <Check size={14} /> : <Copy size={14} />} onClick={handleCopy}>
+              {copied ? t('copied') : t('copy')}
+            </Button>
+            <Button variant="secondary" size="sm" icon={<Download size={14} />} onClick={() => exportTimerCSV(records)}>
+              {t('csv')}
+            </Button>
+          </div>
+        }
+      />
 
       <Card title={editId ? t('reportEditRecord') : t('reportAddRecord')} className="mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
@@ -158,11 +159,13 @@ export default function ReporteTemporizador() {
 
       <Card>
         {records.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-400">
-            <ClipboardList size={40} strokeWidth={1.25} className="text-slate-300" />
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center">
+              <ClipboardList size={24} className="text-slate-400" />
+            </div>
             <div className="text-center">
-              <p className="font-medium text-slate-500">{t('reportEmpty')}</p>
-              <p className="text-sm mt-0.5">{t('reportEmptySub')}</p>
+              <p className="font-semibold text-slate-600">{t('reportEmpty')}</p>
+              <p className="text-sm text-slate-400 mt-0.5">{t('reportEmptySub')}</p>
             </div>
           </div>
         ) : (

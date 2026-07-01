@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Trash2, RotateCcw, X, Download, Copy, Check } from 'lucide-react'
+import { Plus, Trash2, RotateCcw, X, Download, Copy, Check, MessageSquare } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useLanguage } from '../contexts/LanguageContext'
 import { AhParticipant } from '../types'
@@ -7,6 +7,7 @@ import { STORAGE_KEYS } from '../utils/storage'
 import { exportAhCounterCSV, exportAhCounterPersonCSV, ahCounterSummaryText, copyToClipboard } from '../utils/export'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
+import { PageHeader } from '../components/ui/PageHeader'
 
 function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
@@ -74,13 +75,11 @@ export default function AhCounter() {
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t('ahTitle')}</h1>
-          <p className="text-slate-500 text-sm mt-1">{t('ahSubtitle')}</p>
-        </div>
-        {participants.length > 0 && (
-          <div className="flex gap-2 shrink-0">
+      <PageHeader
+        title={t('ahTitle')}
+        subtitle={t('ahSubtitle')}
+        action={participants.length > 0 ? (
+          <div className="flex gap-2">
             <Button
               variant="secondary"
               size="sm"
@@ -101,12 +100,12 @@ export default function AhCounter() {
               {t('exportAll')}
             </Button>
           </div>
-        )}
-      </div>
+        ) : undefined}
+      />
 
       {/* Top controls */}
       <div className="grid md:grid-cols-2 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">{t('ahAddSpeaker')}</p>
           <div className="flex gap-2">
             <input
@@ -125,7 +124,7 @@ export default function AhCounter() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">{t('ahActiveWords')}</p>
           <div className="flex gap-2 mb-3">
             <input
@@ -157,9 +156,12 @@ export default function AhCounter() {
 
       {/* Participant cards */}
       {participants.length === 0 ? (
-        <div className="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center text-slate-400">
-          <p className="text-base font-medium">{t('ahEmpty')}</p>
-          <p className="text-sm mt-1">{t('ahEmptySub')}</p>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-16 text-center">
+          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+            <MessageSquare size={22} className="text-slate-400" />
+          </div>
+          <p className="text-base font-semibold text-slate-600">{t('ahEmpty')}</p>
+          <p className="text-sm text-slate-400 mt-1">{t('ahEmptySub')}</p>
         </div>
       ) : (
         <div className="space-y-4">

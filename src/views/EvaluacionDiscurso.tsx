@@ -13,6 +13,7 @@ import { EVALUACIONES } from '../data/evaluaciones'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
+import { PageHeader } from '../components/ui/PageHeader'
 
 function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
@@ -118,16 +119,15 @@ export default function EvaluacionDiscurso() {
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t('speechEvalTitle')}</h1>
-          <p className="text-slate-500 text-sm mt-1">{t('speechEvalSubtitle')}</p>
-        </div>
-        <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setShowPicker(true)}>
-          {t('speechEvalNew')}
-        </Button>
-      </div>
+      <PageHeader
+        title={t('speechEvalTitle')}
+        subtitle={t('speechEvalSubtitle')}
+        action={
+          <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setShowPicker(true)}>
+            {t('speechEvalNew')}
+          </Button>
+        }
+      />
 
       {/* Evaluation picker modal */}
       {showPicker && (
@@ -366,11 +366,13 @@ export default function EvaluacionDiscurso() {
         </>
       ) : (
         <Card>
-          <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-400">
-            <ClipboardList size={40} strokeWidth={1.25} className="text-slate-300" />
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center">
+              <ClipboardList size={24} className="text-slate-400" />
+            </div>
             <div className="text-center">
-              <p className="font-medium text-slate-500">{t('speechEvalEmpty')}</p>
-              <p className="text-sm mt-0.5">{t('speechEvalEmptySub')}</p>
+              <p className="font-semibold text-slate-600">{t('speechEvalEmpty')}</p>
+              <p className="text-sm text-slate-400 mt-0.5">{t('speechEvalEmptySub')}</p>
             </div>
             <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setShowPicker(true)} className="mt-2">
               {t('speechEvalNew')}

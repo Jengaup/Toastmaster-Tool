@@ -9,6 +9,7 @@ import { copyToClipboard } from '../utils/export'
 import { Button } from '../components/ui/Button'
 import { Textarea } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
+import { PageHeader } from '../components/ui/PageHeader'
 
 function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
@@ -118,15 +119,15 @@ export default function EvaluadorGeneral() {
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto">
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t('evalTitle')}</h1>
-          <p className="text-slate-500 text-sm mt-1">{t('evalSubtitle')}</p>
-        </div>
-        <Button variant="secondary" size="sm" icon={copied ? <Check size={14} /> : <Copy size={14} />} onClick={handleCopy}>
-          {copied ? t('copied') : t('evalCopyBtn')}
-        </Button>
-      </div>
+      <PageHeader
+        title={t('evalTitle')}
+        subtitle={t('evalSubtitle')}
+        action={
+          <Button variant="secondary" size="sm" icon={copied ? <Check size={14} /> : <Copy size={14} />} onClick={handleCopy}>
+            {copied ? t('copied') : t('evalCopyBtn')}
+          </Button>
+        }
+      />
 
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-1">

@@ -12,6 +12,7 @@ import { formatTime } from '../utils/formatTime'
 import { getPhase, getPhaseColor } from '../hooks/useTimer'
 import { copyToClipboard } from '../utils/export'
 import { Button } from '../components/ui/Button'
+import { PageHeader } from '../components/ui/PageHeader'
 
 const SEG_KEYS: Record<string, TKey> = {
   s1: 'evalSeg1', s2: 'evalSeg2', s3: 'evalSeg3', s4: 'evalSeg4',
@@ -182,32 +183,31 @@ export default function ImprimirReporte() {
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto print:p-0 print:max-w-none">
       {/* Action bar — hidden on print */}
-      <div className="print:hidden mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t('printTitle')}</h1>
-          <p className="text-slate-500 text-sm mt-1">
-            {clubName ? <span className="font-semibold text-indigo-600">{clubName} · </span> : null}
-            {t('printSubtitle')}
-          </p>
-        </div>
-        <div className="flex gap-2 shrink-0">
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={copied ? <Check size={14} /> : <Copy size={14} />}
-            onClick={handleCopy}
-          >
-            {copied ? t('printCopied') : t('printCopyAll')}
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            icon={<Printer size={14} />}
-            onClick={() => window.print()}
-          >
-            {t('printBtn')}
-          </Button>
-        </div>
+      <div className="print:hidden">
+        <PageHeader
+          title={t('printTitle')}
+          subtitle={clubName ? `${clubName} · ${t('printSubtitle')}` : t('printSubtitle')}
+          action={
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={copied ? <Check size={14} /> : <Copy size={14} />}
+                onClick={handleCopy}
+              >
+                {copied ? t('printCopied') : t('printCopyAll')}
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<Printer size={14} />}
+                onClick={() => window.print()}
+              >
+                {t('printBtn')}
+              </Button>
+            </div>
+          }
+        />
       </div>
 
       {/* Report content */}
@@ -604,10 +604,12 @@ export default function ImprimirReporte() {
 
         {/* Empty state */}
         {timerRecords.length === 0 && ahParticipants.length === 0 && !gramData.palabraDelDia && !evalData.resumenFinal && !evalContexto?.tipo && (
-          <div className="bg-white rounded-xl border border-dashed border-slate-300 p-16 text-center text-slate-400 print:hidden">
-            <Printer size={32} className="mx-auto mb-3 opacity-30" />
-            <p className="font-medium">{t('printNoData')}</p>
-            <p className="text-sm mt-1">{t('printNoDataSub')}</p>
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-16 text-center print:hidden">
+            <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+              <Printer size={24} className="text-slate-400" />
+            </div>
+            <p className="font-semibold text-slate-600">{t('printNoData')}</p>
+            <p className="text-sm text-slate-400 mt-1">{t('printNoDataSub')}</p>
           </div>
         )}
       </div>

@@ -9,6 +9,7 @@ import { formatTime, secondsToInput, parseTimeInput } from '../utils/formatTime'
 import { STORAGE_KEYS } from '../utils/storage'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
+import { PageHeader } from '../components/ui/PageHeader'
 
 function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
@@ -170,13 +171,10 @@ export default function Temporizador() {
 
   return (
     <div className="p-4 md:p-8 max-w-2xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">{t('timerTitle')}</h1>
-        <p className="text-slate-500 text-sm mt-1">{t('timerSubtitle')}</p>
-      </div>
+      <PageHeader title={t('timerTitle')} subtitle={t('timerSubtitle')} />
 
       {/* ── Meeting Clock Panel ─────────────────────────────────────────── */}
-      <div className="mb-4 bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="mb-4 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <button
           onClick={() => setShowMeeting(v => !v)}
           className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
@@ -262,7 +260,7 @@ export default function Temporizador() {
       </div>
 
       {/* ── Meeting Segments Panel ───────────────────────────────────────── */}
-      <div className="mb-6 bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="mb-6 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <button
           onClick={() => setShowSegments(v => !v)}
           className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
@@ -392,7 +390,7 @@ export default function Temporizador() {
         className={`flex flex-col items-center transition-colors duration-500 ${
           isFullscreen
             ? 'bg-slate-950 justify-center gap-6 p-10'
-            : 'rounded-2xl border bg-white p-6 md:p-10 gap-5'
+            : 'rounded-2xl border bg-white shadow-lg p-6 md:p-10 gap-5'
         }`}
         style={!isFullscreen ? {
           borderColor: phase !== 'neutral' ? `${color}50` : '#e2e8f0',
@@ -557,7 +555,7 @@ export default function Temporizador() {
       </div>
 
       {/* Config section */}
-      <div className="mt-4 bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="mt-4 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <button
           onClick={() => setShowConfig(!showConfig)}
           className="w-full flex items-center justify-between px-5 py-4 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"

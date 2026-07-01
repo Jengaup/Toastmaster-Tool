@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button'
 import { Input, Textarea, Select } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
+import { PageHeader } from '../components/ui/PageHeader'
 
 function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
@@ -124,10 +125,7 @@ export default function Gramatical() {
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">{t('gramTitle')}</h1>
-        <p className="text-slate-500 text-sm mt-1">{t('gramSubtitle')}</p>
-      </div>
+      <PageHeader title={t('gramTitle')} subtitle={t('gramSubtitle')} />
 
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-1 space-y-4">
