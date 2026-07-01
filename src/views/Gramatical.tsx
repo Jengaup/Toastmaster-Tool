@@ -15,6 +15,7 @@ function newId() { return Date.now().toString(36) + Math.random().toString(36).s
 const DEFAULT_DATA: GrammarData = {
   palabraDelDia: 'Elocuente',
   definicion: 'Que tiene la capacidad de expresarse con claridad y persuasión.',
+  ejemplo: '',
   observaciones: [],
   usosDelDia: {},
 }
@@ -25,7 +26,7 @@ export default function Gramatical() {
   const [form, setForm] = useState({ nombre: '', tipo: 'bueno' as GrammarObservacion['tipo'], texto: '' })
   const [editId, setEditId] = useState<string | null>(null)
   const [editPalabra, setEditPalabra] = useState(false)
-  const [palabraForm, setPalabraForm] = useState({ palabraDelDia: data.palabraDelDia, definicion: data.definicion })
+  const [palabraForm, setPalabraForm] = useState({ palabraDelDia: data.palabraDelDia, definicion: data.definicion, ejemplo: data.ejemplo ?? '' })
   const [usoNombre, setUsoNombre] = useState('')
 
   const TIPO_LABELS: Record<GrammarObservacion['tipo'], string> = {
@@ -71,7 +72,7 @@ export default function Gramatical() {
   }
 
   const savePalabra = () => {
-    setData((prev) => ({ ...prev, palabraDelDia: palabraForm.palabraDelDia, definicion: palabraForm.definicion }))
+    setData((prev) => ({ ...prev, palabraDelDia: palabraForm.palabraDelDia, definicion: palabraForm.definicion, ejemplo: palabraForm.ejemplo }))
     setEditPalabra(false)
   }
 
@@ -151,6 +152,12 @@ export default function Gramatical() {
                   onChange={(e) => setPalabraForm((p) => ({ ...p, definicion: e.target.value }))}
                   rows={3}
                 />
+                <Input
+                  label={t('gramExampleLabel')}
+                  value={palabraForm.ejemplo}
+                  onChange={(e) => setPalabraForm((p) => ({ ...p, ejemplo: e.target.value }))}
+                  placeholder={t('gramExamplePlaceholder')}
+                />
                 <div className="flex gap-2">
                   <Button variant="primary" size="sm" icon={<Check size={14} />} onClick={savePalabra}>{t('gramSave')}</Button>
                   <Button variant="ghost" size="sm" icon={<X size={14} />} onClick={() => setEditPalabra(false)}>{t('cancel')}</Button>
@@ -160,8 +167,11 @@ export default function Gramatical() {
               <div>
                 <div className="text-xl font-bold text-indigo-700 mb-1">{data.palabraDelDia}</div>
                 <p className="text-sm text-slate-600 leading-relaxed">{data.definicion || t('gramNoDefinition')}</p>
+                {data.ejemplo && (
+                  <p className="mt-2 text-xs text-slate-500 italic border-l-2 border-indigo-200 pl-2 leading-relaxed">"{data.ejemplo}"</p>
+                )}
                 <button
-                  onClick={() => { setEditPalabra(true); setPalabraForm({ palabraDelDia: data.palabraDelDia, definicion: data.definicion }) }}
+                  onClick={() => { setEditPalabra(true); setPalabraForm({ palabraDelDia: data.palabraDelDia, definicion: data.definicion, ejemplo: data.ejemplo ?? '' }) }}
                   className="mt-3 text-xs text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors"
                 >
                   <Pencil size={12} /> {t('gramEditWordOfDay')}

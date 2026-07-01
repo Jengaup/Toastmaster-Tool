@@ -35,6 +35,8 @@ const translations = {
     meetingSegmentAdd: 'Añadir',
     meetingSegmentPlaceholder: 'Nombre del segmento...',
     meetingSpeechSection: 'Temporizador de discurso',
+    meetingLoadStandard: 'Cargar agenda estándar',
+    meetingLoadStandardConfirm: 'Esto reemplazará los segmentos actuales. ¿Continuar?',
 
     // Timer
     timerTitle: 'Temporizador',
@@ -61,6 +63,30 @@ const translations = {
     timerConfigGreenLabel: '🟢 Verde (MM:SS)',
     timerConfigYellowLabel: '🟡 Amarillo (MM:SS)',
     timerConfigRedLabel: '🔴 Rojo (MM:SS)',
+    timerOfficialRanges: 'Aplicar rango TM oficial',
+    timerSpeakerDetails: 'Datos del discurso',
+    timerHideSpeakerDetails: 'Ocultar datos',
+    timerPathway: 'Trayecto (Pathway)',
+    timerProject: 'Proyecto / Nivel',
+    timerSpeechTitle: 'Título del discurso',
+
+    // Roles
+    navRoles: 'Roles de la reunión',
+    rolesTitle: 'Roles de la reunión',
+    rolesSubtitle: 'Registro de quién ocupa cada función hoy',
+    rolePresidente: 'Presidente',
+    roleToastmaster: 'Toastmaster del día',
+    roleEvaluadorGeneral: 'Evaluador General',
+    roleMonitorMuletillas: 'Monitor de Muletillas',
+    roleMonitorGramatica: 'Monitor de Gramática',
+    roleMonitorPalabra: 'Monitor de la Palabra',
+    roleCronometrador: 'Cronometrador',
+    roleMonitorChat: 'Monitor Chat / Técnico',
+    roleSargento: 'Sargento de Armas',
+    roleMemberPlaceholder: 'Nombre del miembro...',
+    rolesReset: 'Limpiar roles',
+    rolesCopy: 'Copiar lista de roles',
+    rolesCopied: 'Copiados',
 
     // Report
     reportTitle: 'Reporte de tiempos',
@@ -138,6 +164,8 @@ const translations = {
     gramAddObs: 'Agregar observación',
     gramNoObs: 'Sin observaciones aún',
     gramAddObsHint: 'Agrega la primera observación usando el formulario de arriba',
+    gramExampleLabel: 'Ejemplo de uso',
+    gramExamplePlaceholder: 'Ejemplo en oración...',
     gramNamePlaceholder: 'Nombre',
 
     // Evaluator
@@ -361,6 +389,8 @@ const translations = {
     meetingSegmentAdd: 'Add',
     meetingSegmentPlaceholder: 'Segment name...',
     meetingSpeechSection: 'Speech timer',
+    meetingLoadStandard: 'Load standard agenda',
+    meetingLoadStandardConfirm: 'This will replace the current segments. Continue?',
 
     // Timer
     timerTitle: 'Timer',
@@ -387,6 +417,30 @@ const translations = {
     timerConfigGreenLabel: '🟢 Green (MM:SS)',
     timerConfigYellowLabel: '🟡 Yellow (MM:SS)',
     timerConfigRedLabel: '🔴 Red (MM:SS)',
+    timerOfficialRanges: 'Apply official TM range',
+    timerSpeakerDetails: 'Speech details',
+    timerHideSpeakerDetails: 'Hide details',
+    timerPathway: 'Pathway',
+    timerProject: 'Project / Level',
+    timerSpeechTitle: 'Speech title',
+
+    // Roles
+    navRoles: 'Meeting Roles',
+    rolesTitle: 'Meeting Roles',
+    rolesSubtitle: 'Record who fills each role today',
+    rolePresidente: 'President',
+    roleToastmaster: 'Toastmaster of the Day',
+    roleEvaluadorGeneral: 'General Evaluator',
+    roleMonitorMuletillas: 'Ah-Counter',
+    roleMonitorGramatica: 'Grammarian',
+    roleMonitorPalabra: 'Word of the Day',
+    roleCronometrador: 'Timer',
+    roleMonitorChat: 'Chat Monitor / Tech',
+    roleSargento: 'Sergeant at Arms',
+    roleMemberPlaceholder: 'Member name...',
+    rolesReset: 'Clear roles',
+    rolesCopy: 'Copy roles list',
+    rolesCopied: 'Copied',
 
     // Report
     reportTitle: 'Time Report',
@@ -464,6 +518,8 @@ const translations = {
     gramAddObs: 'Add observation',
     gramNoObs: 'No observations yet',
     gramAddObsHint: 'Add the first observation using the form above',
+    gramExampleLabel: 'Usage example',
+    gramExamplePlaceholder: 'Example sentence...',
     gramNamePlaceholder: 'Name',
 
     // Evaluator

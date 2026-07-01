@@ -13,11 +13,13 @@ import { PageHeader } from '../components/ui/PageHeader'
 function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
 const SAMPLE_CAMPOS: CampoPersonalizado[] = [
-  { id: '1', etiqueta: 'Club', tipo: 'texto', valor: 'Toastmasters Club 1234' },
-  { id: '2', etiqueta: 'Fecha de reunión', tipo: 'texto', valor: new Date().toLocaleDateString('es-ES') },
-  { id: '3', etiqueta: 'Número de reunión', tipo: 'numero', valor: '42' },
+  { id: '1', etiqueta: 'Club', tipo: 'texto', valor: '' },
+  { id: '2', etiqueta: 'Número de reunión', tipo: 'numero', valor: '' },
+  { id: '3', etiqueta: 'Ciclo educativo', tipo: 'texto', valor: '2025-2026' },
   { id: '4', etiqueta: 'Modalidad', tipo: 'lista', valor: 'Presencial', opciones: ['Presencial', 'Virtual', 'Híbrida'] },
-  { id: '5', etiqueta: 'Tema de la reunión', tipo: 'texto', valor: 'Superando obstáculos' },
+  { id: '5', etiqueta: 'Tema de la reunión', tipo: 'texto', valor: '' },
+  { id: '6', etiqueta: 'Toastmaster del día', tipo: 'texto', valor: '' },
+  { id: '7', etiqueta: 'Evaluador General', tipo: 'texto', valor: '' },
 ]
 
 export default function DatosPersonalizados() {

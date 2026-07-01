@@ -49,7 +49,7 @@ export default function ImprimirReporte() {
   const [timerRecords] = useLocalStorage<TimerRecord[]>(STORAGE_KEYS.TIMER_RECORDS, [])
   const [ahParticipants] = useLocalStorage<AhParticipant[]>(STORAGE_KEYS.AH_PARTICIPANTS, [])
   const [activeWords] = useLocalStorage<string[]>(STORAGE_KEYS.AH_WORDS, [])
-  const [gramData] = useLocalStorage<GrammarData>(STORAGE_KEYS.GRAMMAR_DATA, { palabraDelDia: '', definicion: '', observaciones: [], usosDelDia: {} })
+  const [gramData] = useLocalStorage<GrammarData>(STORAGE_KEYS.GRAMMAR_DATA, { palabraDelDia: '', definicion: '', ejemplo: '', observaciones: [], usosDelDia: {} })
   const [evalData] = useLocalStorage<EvaluadorData>(STORAGE_KEYS.EVALUADOR_DATA, { segmentos: [], checklist: [], resumenFinal: '' })
   const [campos] = useLocalStorage<CampoPersonalizado[]>(STORAGE_KEYS.CAMPOS_PERSONALIZADOS, [])
   const [timerConfig] = useLocalStorage<Record<SpeechType, TimerConfig>>(STORAGE_KEYS.TIMER_CONFIG, DEFAULT_TIMER_CONFIG)

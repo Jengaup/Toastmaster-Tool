@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Timer, ClipboardList, MessageSquare, BookOpen, Star, Settings, X, Mic, Printer, Lock, Trash2, RotateCcw, FileCheck2, GraduationCap } from 'lucide-react'
+import { Timer, ClipboardList, MessageSquare, BookOpen, Star, Settings, X, Mic, Printer, Lock, Trash2, RotateCcw, FileCheck2, GraduationCap, Users } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { TKey } from '../i18n'
 import { hasPinEnabled, savePin, removePin, lockApp } from '../utils/pin'
@@ -23,6 +23,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/evaluador',     labelKey: 'navEvaluator',    icon: <Star size={18} />,          activeBg: 'bg-amber-500'  },
   { path: '/imprimir',      labelKey: 'navPrint',       icon: <Printer size={18} />,       activeBg: 'bg-indigo-600' },
   { path: '/personalizado', labelKey: 'navCustom',      icon: <Settings size={18} />,      activeBg: 'bg-slate-500'  },
+  { path: '/roles',         labelKey: 'navRoles',       icon: <Users size={18} />,         activeBg: 'bg-rose-600'   },
 ]
 
 interface SidebarProps {
@@ -50,6 +51,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     storageClear(STORAGE_KEYS.EVAL_DISCURSO)
     storageClear(STORAGE_KEYS.MEETING_CLOCK)
     storageClear(STORAGE_KEYS.MEETING_SEGMENTS)
+    storageClear(STORAGE_KEYS.MEETING_ROLES)
     window.location.reload()
   }
 

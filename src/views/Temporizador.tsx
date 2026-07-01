@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Play, Pause, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Check, Maximize2, Minimize2, Clock, LayoutList, X, AlertTriangle } from 'lucide-react'
+import { Play, Pause, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Check, Maximize2, Minimize2, Clock, LayoutList, X, AlertTriangle, ChevronRight, ListOrdered } from 'lucide-react'
 import { useTimer, getPhase, getPhaseColor } from '../hooks/useTimer'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -26,6 +26,13 @@ const SPEECH_TYPE_FS_BADGE: Record<SpeechType, string> = {
   evaluacion:     'bg-sky-900/50 text-sky-300',
   personalizado:  'bg-slate-800 text-slate-300',
 }
+
+const TM_OFFICIAL_RANGES: { label: string; green: number; yellow: number; red: number }[] = [
+  { label: '4-6',   green: 240, yellow: 300, red: 360 },
+  { label: '5-7',   green: 300, yellow: 360, red: 420 },
+  { label: '10-15', green: 600, yellow: 738, red: 900 },
+  { label: '18-20', green: 1080, yellow: 1140, red: 1200 },
+]
 
 const PHASE_VARIANTS = {
   neutral:  'primary',
@@ -56,12 +63,16 @@ export default function Temporizador() {
   const {
     clock, clockElapsedMs, totalMs, remainingMs, isRunning: meetingRunning, isOver,
     startMeeting, pauseMeeting, resetMeeting, setDuration,
-    segments, segmentElapsedMs, toggleSegment, resetSegment, addSegment, deleteSegment,
+    segments, segmentElapsedMs, toggleSegment, resetSegment, addSegment, deleteSegment, loadStandardAgenda,
   } = useMeetingClock()
   const [showMeeting, setShowMeeting] = useLocalStorage('tm_ui_panel_meeting', true)
   const [showSegments, setShowSegments] = useLocalStorage('tm_ui_panel_segments', false)
   const [newSegLabel, setNewSegLabel] = useState('')
   const [confirmReset, setConfirmReset] = useState(false)
+  const [showSpeakerDetails, setShowSpeakerDetails] = useState(false)
+  const [trayecto, setTrayecto] = useState('')
+  const [proyecto, setProyecto] = useState('')
+  const [titulodiscurso, setTituloDiscurso] = useState('')
   const confirmResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const meetingActive = meetingRunning || clock.pausedElapsed > 0
@@ -157,13 +168,20 @@ export default function Temporizador() {
       tiempoFinal: elapsed,
       notas: '',
       fecha: new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US'),
+      ...(trayecto.trim() && { trayecto: trayecto.trim() }),
+      ...(proyecto.trim() && { proyecto: proyecto.trim() }),
+      ...(titulodiscurso.trim() && { titulo: titulodiscurso.trim() }),
     }
     setRecords((prev) => [...prev, record])
     setSavedFeedback(true)
     setSpeakerName('')
+    setTrayecto('')
+    setProyecto('')
+    setTituloDiscurso('')
+    setShowSpeakerDetails(false)
     setTimeout(() => setSavedFeedback(false), 2000)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [elapsed, speakerName, speechType, lang])
+  }, [elapsed, speakerName, speechType, lang, trayecto, proyecto, titulodiscurso])
 
   useEffect(() => { saveRef.current = saveToRecord }, [saveToRecord])
 
@@ -346,6 +364,18 @@ export default function Temporizador() {
                 {t('meetingSegmentAdd')}
               </button>
             </div>
+            {/* Load standard agenda */}
+            <div className="px-5 py-2.5 border-t border-slate-100">
+              <button
+                onClick={() => {
+                  if (window.confirm(t('meetingLoadStandardConfirm'))) loadStandardAgenda()
+                }}
+                className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-indigo-600 transition-colors"
+              >
+                <ListOrdered size={12} />
+                {t('meetingLoadStandard')}
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -357,7 +387,7 @@ export default function Temporizador() {
       </div>
 
       {/* Speech type selector — segmented control */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-1 bg-slate-100 rounded-xl p-1 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-1 bg-slate-100 rounded-xl p-1 mb-2">
         {(Object.keys(SPEECH_PRESETS) as SpeechType[]).map((type) => {
           const isActive = speechType === type
           const styles = SPEECH_TYPE_STYLES[type]
@@ -375,13 +405,78 @@ export default function Temporizador() {
         })}
       </div>
 
-      {/* Speaker name */}
-      <div className="mb-4">
-        <Input
-          value={speakerName}
-          onChange={(e) => setSpeakerName(e.target.value)}
-          placeholder={t('timerSpeakerPlaceholder')}
-        />
+      {/* Official TM range quick-apply — only for prepared speech */}
+      {speechType === 'preparado' && (
+        <div className="flex items-center gap-2 mb-4 px-1">
+          <span className="text-xs text-slate-400 shrink-0">{t('timerOfficialRanges')}:</span>
+          <div className="flex gap-1.5 flex-wrap">
+            {TM_OFFICIAL_RANGES.map((r) => {
+              const isCurrentRange =
+                config.preparado.greenTime === r.green &&
+                config.preparado.yellowTime === r.yellow &&
+                config.preparado.redTime === r.red
+              return (
+                <button
+                  key={r.label}
+                  onClick={() => setConfig(prev => ({
+                    ...prev,
+                    preparado: { ...prev.preparado, greenTime: r.green, yellowTime: r.yellow, redTime: r.red }
+                  }))}
+                  className={`text-xs px-2.5 py-1 rounded-full font-medium border transition-all ${
+                    isCurrentRange
+                      ? 'bg-violet-100 text-violet-700 border-violet-300'
+                      : 'bg-white text-slate-500 border-slate-200 hover:border-violet-300 hover:text-violet-600'
+                  }`}
+                >
+                  {r.label} min
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+      {speechType !== 'preparado' && <div className="mb-4" />}
+
+      {/* Speaker name + optional details */}
+      <div className="mb-4 space-y-2">
+        <div className="flex gap-2">
+          <Input
+            className="flex-1"
+            value={speakerName}
+            onChange={(e) => setSpeakerName(e.target.value)}
+            placeholder={t('timerSpeakerPlaceholder')}
+          />
+          <button
+            onClick={() => setShowSpeakerDetails(v => !v)}
+            className={`shrink-0 flex items-center gap-1 text-xs px-3 py-2 rounded-lg border transition-all ${
+              showSpeakerDetails
+                ? 'bg-indigo-50 text-indigo-600 border-indigo-200'
+                : 'bg-white text-slate-400 border-slate-200 hover:border-indigo-200 hover:text-indigo-500'
+            }`}
+          >
+            <ChevronRight size={12} className={`transition-transform ${showSpeakerDetails ? 'rotate-90' : ''}`} />
+            {showSpeakerDetails ? t('timerHideSpeakerDetails') : t('timerSpeakerDetails')}
+          </button>
+        </div>
+        {showSpeakerDetails && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pl-1">
+            <Input
+              value={titulodiscurso}
+              onChange={(e) => setTituloDiscurso(e.target.value)}
+              placeholder={t('timerSpeechTitle')}
+            />
+            <Input
+              value={trayecto}
+              onChange={(e) => setTrayecto(e.target.value)}
+              placeholder={t('timerPathway')}
+            />
+            <Input
+              value={proyecto}
+              onChange={(e) => setProyecto(e.target.value)}
+              placeholder={t('timerProject')}
+            />
+          </div>
+        )}
       </div>
 
       {/* Timer card — this element goes fullscreen */}
