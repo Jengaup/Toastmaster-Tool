@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Menu } from 'lucide-react'
 import { Sidebar } from './Sidebar'
+import { MeetingClockBar } from './MeetingClockBar'
 import { useLanguage } from '../contexts/LanguageContext'
 
 interface LayoutProps {
@@ -26,6 +27,7 @@ export function Layout({ children }: LayoutProps) {
           <span className="font-semibold text-slate-900 text-sm">{t('appName')}</span>
         </header>
 
+        <MeetingClockBar />
         <main className="flex-1 overflow-y-auto">
           {children}
         </main>

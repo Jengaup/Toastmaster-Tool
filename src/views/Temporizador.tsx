@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Play, Pause, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Check, Maximize2, Minimize2 } from 'lucide-react'
+import { Play, Pause, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Check, Maximize2, Minimize2, Clock, LayoutList, X } from 'lucide-react'
 import { useTimer, getPhase, getPhaseColor } from '../hooks/useTimer'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useLanguage } from '../contexts/LanguageContext'
+import { useMeetingClock } from '../contexts/MeetingClockContext'
 import { SpeechType, SPEECH_PRESETS, TimerConfig, TimerRecord } from '../types'
 import { formatTime, secondsToInput, parseTimeInput } from '../utils/formatTime'
 import { STORAGE_KEYS } from '../utils/storage'
@@ -49,6 +50,18 @@ export default function Temporizador() {
   const [savedFeedback, setSavedFeedback] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Meeting clock
+  const {
+    clock, clockElapsedMs, totalMs, remainingMs, isRunning: meetingRunning, isOver,
+    startMeeting, pauseMeeting, resetMeeting, setDuration,
+    segments, segmentElapsedMs, toggleSegment, resetSegment, addSegment, deleteSegment,
+  } = useMeetingClock()
+  const [showMeeting, setShowMeeting] = useState(true)
+  const [showSegments, setShowSegments] = useState(false)
+  const [newSegLabel, setNewSegLabel] = useState('')
+
+  const meetingActive = meetingRunning || clock.pausedElapsed > 0
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -139,6 +152,189 @@ export default function Temporizador() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900">{t('timerTitle')}</h1>
         <p className="text-slate-500 text-sm mt-1">{t('timerSubtitle')}</p>
+      </div>
+
+      {/* ── Meeting Clock Panel ─────────────────────────────────────────── */}
+      <div className="mb-4 bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <button
+          onClick={() => setShowMeeting(v => !v)}
+          className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Clock size={15} className="text-indigo-500" />
+            <span>{t('meetingTitle')}</span>
+            {meetingActive && (
+              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                isOver ? 'bg-red-100 text-red-600' :
+                meetingRunning ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+              }`}>
+                {isOver
+                  ? `+${formatTime(Math.floor(clockElapsedMs / 1000) - clock.durationMins * 60)}`
+                  : formatTime(Math.floor(remainingMs / 1000))
+                }
+              </span>
+            )}
+          </div>
+          {showMeeting ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+        </button>
+
+        {showMeeting && (
+          <div className="px-5 pb-5 border-t border-slate-100">
+            {/* Duration row */}
+            <div className="flex items-center gap-3 pt-4 mb-5">
+              <span className="text-xs font-medium text-slate-500 shrink-0">{t('meetingDuration')}:</span>
+              <input
+                type="number"
+                min={1}
+                max={300}
+                value={clock.durationMins}
+                onChange={e => setDuration(Math.max(1, parseInt(e.target.value) || 1))}
+                disabled={meetingRunning}
+                className="w-20 px-2 py-1 border border-slate-200 rounded-lg text-sm text-center font-mono focus:outline-none focus:ring-2 focus:ring-indigo-300 disabled:opacity-50"
+              />
+              <span className="text-xs text-slate-400">{t('meetingDurationMins')}</span>
+            </div>
+
+            {/* Countdown display */}
+            <div className="text-center mb-4">
+              <div className={`font-timer font-bold leading-none transition-colors ${
+                isOver ? 'text-red-500' : meetingRunning ? 'text-indigo-700' : 'text-slate-500'
+              }`} style={{ fontSize: 'clamp(2.5rem, 10vw, 4rem)' }}>
+                {isOver
+                  ? `+${formatTime(Math.floor(clockElapsedMs / 1000) - clock.durationMins * 60)}`
+                  : formatTime(Math.floor(remainingMs / 1000))
+                }
+              </div>
+              <div className="text-xs text-slate-400 mt-1">
+                {isOver ? t('meetingOver') : `${t('meetingRemaining')} · ${clock.durationMins} ${t('meetingDurationMins')}`}
+              </div>
+              {/* Progress bar */}
+              <div className="mt-3 h-2 bg-slate-100 rounded-full overflow-hidden mx-auto max-w-xs">
+                <div
+                  className={`h-full rounded-full transition-all duration-1000 ${
+                    isOver ? 'bg-red-500' : clockElapsedMs / totalMs >= 0.8 ? 'bg-amber-400' : 'bg-indigo-500'
+                  }`}
+                  style={{ width: `${Math.min(clockElapsedMs / totalMs * 100, 100)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="flex gap-2 justify-center">
+              {!meetingRunning ? (
+                <Button variant="primary" size="sm" icon={<Play size={13} fill="currentColor" />} onClick={startMeeting}>
+                  {clock.pausedElapsed > 0 ? t('meetingResume') : t('meetingStart')}
+                </Button>
+              ) : (
+                <Button variant="warning" size="sm" icon={<Pause size={13} fill="currentColor" />} onClick={pauseMeeting}>
+                  {t('meetingPause')}
+                </Button>
+              )}
+              {meetingActive && (
+                <Button variant="secondary" size="sm" icon={<RotateCcw size={13} />} onClick={resetMeeting}>
+                  {t('meetingReset')}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Meeting Segments Panel ───────────────────────────────────────── */}
+      <div className="mb-6 bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <button
+          onClick={() => setShowSegments(v => !v)}
+          className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <LayoutList size={15} className="text-slate-400" />
+            <span>{t('meetingSegmentsTitle')}</span>
+            {segments.some(s => s.startedAt !== null || s.accumulated > 0) && (
+              <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-semibold">
+                {segments.filter(s => s.startedAt !== null || s.accumulated > 0).length}
+              </span>
+            )}
+          </div>
+          {showSegments ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+        </button>
+
+        {showSegments && (
+          <div className="border-t border-slate-100">
+            {segments.map(seg => {
+              const elapsedSecs = Math.floor(segmentElapsedMs(seg) / 1000)
+              const active = seg.startedAt !== null
+              return (
+                <div
+                  key={seg.id}
+                  className={`flex items-center gap-3 px-5 py-2.5 border-b border-slate-50 last:border-0 transition-colors ${
+                    active ? 'bg-indigo-50/70' : ''
+                  }`}
+                >
+                  <button
+                    onClick={() => toggleSegment(seg.id)}
+                    className={`p-1.5 rounded-lg transition-colors shrink-0 ${
+                      active
+                        ? 'bg-indigo-500 text-white hover:bg-indigo-600'
+                        : 'bg-slate-100 text-slate-600 hover:bg-indigo-100 hover:text-indigo-600'
+                    }`}
+                  >
+                    {active ? <Pause size={11} fill="currentColor" /> : <Play size={11} fill="currentColor" />}
+                  </button>
+                  <span className={`flex-1 text-sm truncate ${active ? 'font-semibold text-indigo-700' : 'text-slate-700'}`}>
+                    {seg.label}
+                  </span>
+                  <span className={`font-mono text-sm shrink-0 ${
+                    active ? 'text-indigo-600 font-bold' : elapsedSecs > 0 ? 'text-slate-600' : 'text-slate-300'
+                  }`}>
+                    {formatTime(elapsedSecs)}
+                  </span>
+                  <button
+                    onClick={() => resetSegment(seg.id)}
+                    title={t('meetingReset')}
+                    className="p-1 text-slate-300 hover:text-slate-500 rounded transition-colors shrink-0"
+                  >
+                    <RotateCcw size={11} />
+                  </button>
+                  <button
+                    onClick={() => deleteSegment(seg.id)}
+                    title={t('delete')}
+                    className="p-1 text-slate-300 hover:text-red-500 rounded transition-colors shrink-0"
+                  >
+                    <X size={11} />
+                  </button>
+                </div>
+              )
+            })}
+            {/* Add segment */}
+            <div className="px-5 py-3 flex gap-2 border-t border-slate-100">
+              <input
+                type="text"
+                value={newSegLabel}
+                onChange={e => setNewSegLabel(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && newSegLabel.trim()) {
+                    addSegment(newSegLabel.trim())
+                    setNewSegLabel('')
+                  }
+                }}
+                placeholder={t('meetingSegmentPlaceholder')}
+                className="flex-1 px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              />
+              <button
+                onClick={() => { if (newSegLabel.trim()) { addSegment(newSegLabel.trim()); setNewSegLabel('') } }}
+                className="px-3 py-1.5 text-sm bg-slate-100 text-slate-600 rounded-lg hover:bg-indigo-100 hover:text-indigo-700 transition-colors font-medium"
+              >
+                {t('meetingSegmentAdd')}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Speech Timer section label ───────────────────────────────────── */}
+      <div className="flex items-center gap-3 mb-4">
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider shrink-0">{t('meetingSpeechSection')}</p>
+        <div className="flex-1 h-px bg-slate-200" />
       </div>
 
       {/* Speech type selector */}

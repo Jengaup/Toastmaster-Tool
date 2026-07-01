@@ -34,4 +34,6 @@ export const STORAGE_KEYS = {
   CAMPOS_PERSONALIZADOS: 'tm_campos_personalizados',
   EVAL_CONTEXTO: 'tm_eval_contexto',
   EVAL_DISCURSO: 'tm_eval_discurso',
+  MEETING_CLOCK: 'tm_meeting_clock',
+  MEETING_SEGMENTS: 'tm_meeting_segments',
 } as const

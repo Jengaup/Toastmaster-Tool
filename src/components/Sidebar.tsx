@@ -48,6 +48,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     storageClear(STORAGE_KEYS.EVALUADOR_DATA)
     storageClear(STORAGE_KEYS.EVAL_CONTEXTO)
     storageClear(STORAGE_KEYS.EVAL_DISCURSO)
+    storageClear(STORAGE_KEYS.MEETING_CLOCK)
+    storageClear(STORAGE_KEYS.MEETING_SEGMENTS)
     window.location.reload()
   }
 

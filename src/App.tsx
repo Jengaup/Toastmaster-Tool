@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { LanguageProvider } from './contexts/LanguageContext'
+import { MeetingClockProvider } from './contexts/MeetingClockContext'
 import { Layout } from './components/Layout'
 import { PinLock } from './components/PinLock'
 import { hasPinEnabled, isSessionUnlocked } from './utils/pin'
@@ -58,7 +59,9 @@ function AppInner() {
 export default function App() {
   return (
     <LanguageProvider>
-      <AppInner />
+      <MeetingClockProvider>
+        <AppInner />
+      </MeetingClockProvider>
     </LanguageProvider>
   )
 }

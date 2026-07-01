@@ -20,6 +20,22 @@ const translations = {
     navCustom: 'Datos personalizados',
     navCustomDesc: 'Campos libres',
 
+    // Meeting clock
+    meetingTitle: 'Reloj de la Reunión',
+    meetingLabel: 'Reunión en curso',
+    meetingDuration: 'Duración',
+    meetingDurationMins: 'minutos',
+    meetingStart: 'Iniciar reunión',
+    meetingResume: 'Continuar',
+    meetingPause: 'Pausar',
+    meetingReset: 'Reiniciar reloj',
+    meetingRemaining: 'restantes',
+    meetingOver: 'EXCEDIDO',
+    meetingSegmentsTitle: 'Segmentos de la reunión',
+    meetingSegmentAdd: 'Añadir',
+    meetingSegmentPlaceholder: 'Nombre del segmento...',
+    meetingSpeechSection: 'Temporizador de discurso',
+
     // Timer
     timerTitle: 'Temporizador',
     timerSubtitle: 'Cronómetro para discursos Toastmasters',
@@ -324,6 +340,22 @@ const translations = {
     navEvaluatorDesc: 'Evaluation notes',
     navCustom: 'Custom Data',
     navCustomDesc: 'Free fields',
+
+    // Meeting clock
+    meetingTitle: 'Meeting Clock',
+    meetingLabel: 'Meeting in progress',
+    meetingDuration: 'Duration',
+    meetingDurationMins: 'minutes',
+    meetingStart: 'Start meeting',
+    meetingResume: 'Resume',
+    meetingPause: 'Pause',
+    meetingReset: 'Reset clock',
+    meetingRemaining: 'remaining',
+    meetingOver: 'OVERTIME',
+    meetingSegmentsTitle: 'Meeting segments',
+    meetingSegmentAdd: 'Add',
+    meetingSegmentPlaceholder: 'Segment name...',
+    meetingSpeechSection: 'Speech timer',
 
     // Timer
     timerTitle: 'Timer',
