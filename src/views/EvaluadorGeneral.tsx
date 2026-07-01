@@ -1,15 +1,22 @@
 import { useState } from 'react'
-import { Plus, Trash2, Check, RotateCcw, Copy } from 'lucide-react'
+import { NavLink } from 'react-router-dom'
+import { Plus, Trash2, Check, RotateCcw, Copy, Users, ChevronDown, ChevronUp } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useLanguage } from '../contexts/LanguageContext'
 import { TKey } from '../i18n'
-import { EvaluadorData, EvalSegmento, EvalChecklist } from '../types'
+import { EvaluadorData, EvalSegmento, EvalChecklist, MeetingRoles } from '../types'
 import { STORAGE_KEYS } from '../utils/storage'
 import { copyToClipboard } from '../utils/export'
 import { Button } from '../components/ui/Button'
 import { Textarea } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
 import { PageHeader } from '../components/ui/PageHeader'
+
+const DEFAULT_ROLES: MeetingRoles = {
+  presidente: '', toastmaster: '', evaluadorGeneral: '',
+  monitorMuletillas: '', monitorGramatica: '', monitorPalabra: '',
+  cronometrador: '', monitorChat: '', sargentoArmas: '',
+}
 
 function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
@@ -63,9 +70,25 @@ const CHECK_KEYS: Record<string, TKey> = {
 export default function EvaluadorGeneral() {
   const { t } = useLanguage()
   const [data, setData] = useLocalStorage<EvaluadorData>(STORAGE_KEYS.EVALUADOR_DATA, DEFAULT_DATA)
+  const [roles] = useLocalStorage<MeetingRoles>(STORAGE_KEYS.MEETING_ROLES, DEFAULT_ROLES)
   const [newSegmento, setNewSegmento] = useState('')
   const [newCheck, setNewCheck] = useState('')
   const [copied, setCopied] = useState(false)
+  const [showRoles, setShowRoles] = useLocalStorage('tm_ui_eval_roles', true)
+
+  const ROLE_DISPLAY: { key: keyof MeetingRoles; labelKey: Parameters<typeof t>[0]; reporter?: boolean }[] = [
+    { key: 'presidente',        labelKey: 'rolePresidente'        },
+    { key: 'toastmaster',       labelKey: 'roleToastmaster'       },
+    { key: 'evaluadorGeneral',  labelKey: 'roleEvaluadorGeneral'  },
+    { key: 'cronometrador',     labelKey: 'roleCronometrador',     reporter: true },
+    { key: 'monitorMuletillas', labelKey: 'roleMonitorMuletillas', reporter: true },
+    { key: 'monitorGramatica',  labelKey: 'roleMonitorGramatica',  reporter: true },
+    { key: 'monitorPalabra',    labelKey: 'roleMonitorPalabra',    reporter: true },
+    { key: 'monitorChat',       labelKey: 'roleMonitorChat'       },
+    { key: 'sargentoArmas',     labelKey: 'roleSargento'          },
+  ]
+
+  const filledRoles = ROLE_DISPLAY.filter(r => roles[r.key].trim())
 
   const updateNota = (id: string, notas: string) => {
     setData((prev) => ({ ...prev, segmentos: prev.segmentos.map((s) => s.id === id ? { ...s, notas } : s) }))
@@ -138,6 +161,49 @@ export default function EvaluadorGeneral() {
           </Button>
         }
       />
+
+      {/* Roles reference panel */}
+      <div className="mb-6 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <button
+          onClick={() => setShowRoles(v => !v)}
+          className="w-full flex items-center justify-between px-5 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Users size={14} className="text-rose-500" />
+            <span>{t('evalRolesRef')}</span>
+            {filledRoles.length > 0 && (
+              <span className="text-xs bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full font-semibold">
+                {filledRoles.length}
+              </span>
+            )}
+          </div>
+          {showRoles ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        </button>
+
+        {showRoles && (
+          <div className="border-t border-slate-100 px-5 py-4">
+            {filledRoles.length === 0 ? (
+              <div className="text-center py-2">
+                <p className="text-sm text-slate-400">{t('evalRolesEmpty')}</p>
+                <NavLink to="/roles" className="text-xs text-rose-500 hover:text-rose-700 underline mt-1 inline-block">
+                  {t('evalRolesEmptyHint')}
+                </NavLink>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-2">
+                {filledRoles.map(r => (
+                  <div key={r.key} className="min-w-0">
+                    <p className={`text-xs font-medium truncate ${r.reporter ? 'text-rose-600' : 'text-slate-400'}`}>
+                      {t(r.labelKey)}
+                    </p>
+                    <p className="text-sm font-semibold text-slate-800 truncate">{roles[r.key]}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-1">
