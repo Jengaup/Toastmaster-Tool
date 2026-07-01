@@ -14,10 +14,10 @@ import { PageHeader } from '../components/ui/PageHeader'
 function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
 const SPEECH_TYPE_STYLES: Record<SpeechType, { active: string; idle: string }> = {
-  preparado:      { active: 'bg-violet-600 text-white border-violet-600 shadow-sm', idle: 'bg-white text-slate-600 border-slate-200 hover:border-violet-300 hover:text-violet-600 hover:bg-violet-50' },
-  'table-topics': { active: 'bg-pink-600 text-white border-pink-600 shadow-sm',    idle: 'bg-white text-slate-600 border-slate-200 hover:border-pink-300 hover:text-pink-600 hover:bg-pink-50' },
-  evaluacion:     { active: 'bg-sky-600 text-white border-sky-600 shadow-sm',      idle: 'bg-white text-slate-600 border-slate-200 hover:border-sky-300 hover:text-sky-600 hover:bg-sky-50' },
-  personalizado:  { active: 'bg-slate-600 text-white border-slate-600 shadow-sm',  idle: 'bg-white text-slate-600 border-slate-200 hover:border-slate-400 hover:text-slate-800 hover:bg-slate-50' },
+  preparado:      { active: 'bg-white shadow-sm text-violet-700 font-semibold', idle: 'text-slate-500 hover:text-slate-700' },
+  'table-topics': { active: 'bg-white shadow-sm text-pink-600 font-semibold',   idle: 'text-slate-500 hover:text-slate-700' },
+  evaluacion:     { active: 'bg-white shadow-sm text-sky-600 font-semibold',     idle: 'text-slate-500 hover:text-slate-700' },
+  personalizado:  { active: 'bg-white shadow-sm text-slate-700 font-semibold',   idle: 'text-slate-500 hover:text-slate-700' },
 }
 
 const SPEECH_TYPE_FS_BADGE: Record<SpeechType, string> = {
@@ -352,12 +352,12 @@ export default function Temporizador() {
 
       {/* ── Speech Timer section label ───────────────────────────────────── */}
       <div className="flex items-center gap-3 mb-4">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider shrink-0">{t('meetingSpeechSection')}</p>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0">{t('meetingSpeechSection')}</p>
         <div className="flex-1 h-px bg-slate-200" />
       </div>
 
-      {/* Speech type selector */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+      {/* Speech type selector — segmented control */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-1 bg-slate-100 rounded-xl p-1 mb-4">
         {(Object.keys(SPEECH_PRESETS) as SpeechType[]).map((type) => {
           const isActive = speechType === type
           const styles = SPEECH_TYPE_STYLES[type]
@@ -365,7 +365,7 @@ export default function Temporizador() {
             <button
               key={type}
               onClick={() => handleSpeechType(type)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border active:scale-[0.97] ${
+              className={`px-3 py-2 rounded-lg text-sm transition-all active:scale-[0.97] ${
                 isActive ? styles.active : styles.idle
               }`}
             >

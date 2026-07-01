@@ -278,8 +278,12 @@ export default function Gramatical() {
 
           <div className="space-y-2">
             {data.observaciones.length === 0 ? (
-              <div className="bg-white rounded-xl border border-slate-200 p-10 text-center text-slate-400">
-                <p>{t('gramNoObs')}</p>
+              <div className="bg-white rounded-xl border border-slate-200 p-10 flex flex-col items-center gap-2 text-center">
+                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                  <BookOpen size={18} className="text-slate-400" />
+                </div>
+                <p className="text-sm font-semibold text-slate-500">{t('gramNoObs')}</p>
+                <p className="text-xs text-slate-400">{t('gramAddObsHint')}</p>
               </div>
             ) : (
               data.observaciones.map((obs) => (

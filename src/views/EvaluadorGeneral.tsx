@@ -45,6 +45,16 @@ const SEG_KEYS: Record<string, TKey> = {
   s5: 'evalSeg5', s6: 'evalSeg6', s7: 'evalSeg7',
 }
 
+const SEG_ACCENTS = [
+  'border-l-sky-400',
+  'border-l-violet-400',
+  'border-l-indigo-400',
+  'border-l-pink-400',
+  'border-l-emerald-400',
+  'border-l-amber-400',
+  'border-l-slate-400',
+]
+
 const CHECK_KEYS: Record<string, TKey> = {
   c1: 'evalCheck1', c2: 'evalCheck2', c3: 'evalCheck3', c4: 'evalCheck4',
   c5: 'evalCheck5', c6: 'evalCheck6', c7: 'evalCheck7', c8: 'evalCheck8',
@@ -187,26 +197,29 @@ export default function EvaluadorGeneral() {
           </Card>
         </div>
 
-        <div className="md:col-span-2 space-y-4">
-          {data.segmentos.map((seg) => (
-            <div key={seg.id} className="bg-white rounded-xl border border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
-                <h3 className="font-semibold text-slate-900 text-sm">{segTitle(seg)}</h3>
-                <button onClick={() => removeSegmento(seg.id)} className="text-slate-300 hover:text-red-400 transition-colors p-1">
-                  <Trash2 size={14} />
-                </button>
+        <div className="md:col-span-2 space-y-3">
+          {data.segmentos.map((seg, i) => {
+            const accent = SEG_ACCENTS[i % SEG_ACCENTS.length]
+            return (
+              <div key={seg.id} className={`bg-white rounded-xl border border-slate-200 border-l-4 shadow-sm ${accent}`}>
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
+                  <h3 className="font-semibold text-slate-800 text-sm">{segTitle(seg)}</h3>
+                  <button onClick={() => removeSegmento(seg.id)} className="text-slate-300 hover:text-red-400 transition-colors p-1">
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+                <div className="px-4 py-3">
+                  <textarea
+                    value={seg.notas}
+                    onChange={(e) => updateNota(seg.id, e.target.value)}
+                    placeholder={t('evalNotesPlaceholder')}
+                    rows={3}
+                    className="w-full text-sm text-slate-700 placeholder-slate-300 border-0 resize-none focus:outline-none focus:ring-0 leading-relaxed"
+                  />
+                </div>
               </div>
-              <div className="p-4">
-                <textarea
-                  value={seg.notas}
-                  onChange={(e) => updateNota(seg.id, e.target.value)}
-                  placeholder={t('evalNotesPlaceholder')}
-                  rows={3}
-                  className="w-full text-sm text-slate-700 placeholder-slate-300 border-0 resize-none focus:outline-none focus:ring-0 leading-relaxed"
-                />
-              </div>
-            </div>
-          ))}
+            )
+          })}
 
           <div className="flex gap-2">
             <input

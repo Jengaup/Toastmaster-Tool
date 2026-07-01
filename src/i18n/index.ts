@@ -137,6 +137,7 @@ const translations = {
     gramObsPlaceholder: 'Describe el buen uso, error o comentario...',
     gramAddObs: 'Agregar observación',
     gramNoObs: 'Sin observaciones aún',
+    gramAddObsHint: 'Agrega la primera observación usando el formulario de arriba',
     gramNamePlaceholder: 'Nombre',
 
     // Evaluator
@@ -462,6 +463,7 @@ const translations = {
     gramObsPlaceholder: 'Describe the good use, error or comment...',
     gramAddObs: 'Add observation',
     gramNoObs: 'No observations yet',
+    gramAddObsHint: 'Add the first observation using the form above',
     gramNamePlaceholder: 'Name',
 
     // Evaluator
