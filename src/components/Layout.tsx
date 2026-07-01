@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Menu } from 'lucide-react'
+import { useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { MeetingClockBar } from './MeetingClockBar'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -11,6 +12,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { t } = useLanguage()
+  const location = useLocation()
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
@@ -29,7 +31,9 @@ export function Layout({ children }: LayoutProps) {
 
         <MeetingClockBar />
         <main className="flex-1 overflow-y-auto">
-          {children}
+          <div key={location.pathname} className="page-enter">
+            {children}
+          </div>
         </main>
       </div>
     </div>

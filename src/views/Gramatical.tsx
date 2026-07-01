@@ -8,12 +8,14 @@ import { Button } from '../components/ui/Button'
 import { Input, Textarea, Select } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
+import { PageHeader } from '../components/ui/PageHeader'
 
 function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
 const DEFAULT_DATA: GrammarData = {
   palabraDelDia: 'Elocuente',
   definicion: 'Que tiene la capacidad de expresarse con claridad y persuasión.',
+  ejemplo: '',
   observaciones: [],
   usosDelDia: {},
 }
@@ -24,7 +26,7 @@ export default function Gramatical() {
   const [form, setForm] = useState({ nombre: '', tipo: 'bueno' as GrammarObservacion['tipo'], texto: '' })
   const [editId, setEditId] = useState<string | null>(null)
   const [editPalabra, setEditPalabra] = useState(false)
-  const [palabraForm, setPalabraForm] = useState({ palabraDelDia: data.palabraDelDia, definicion: data.definicion })
+  const [palabraForm, setPalabraForm] = useState({ palabraDelDia: data.palabraDelDia, definicion: data.definicion, ejemplo: data.ejemplo ?? '' })
   const [usoNombre, setUsoNombre] = useState('')
 
   const TIPO_LABELS: Record<GrammarObservacion['tipo'], string> = {
@@ -70,7 +72,7 @@ export default function Gramatical() {
   }
 
   const savePalabra = () => {
-    setData((prev) => ({ ...prev, palabraDelDia: palabraForm.palabraDelDia, definicion: palabraForm.definicion }))
+    setData((prev) => ({ ...prev, palabraDelDia: palabraForm.palabraDelDia, definicion: palabraForm.definicion, ejemplo: palabraForm.ejemplo }))
     setEditPalabra(false)
   }
 
@@ -124,10 +126,7 @@ export default function Gramatical() {
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">{t('gramTitle')}</h1>
-        <p className="text-slate-500 text-sm mt-1">{t('gramSubtitle')}</p>
-      </div>
+      <PageHeader title={t('gramTitle')} subtitle={t('gramSubtitle')} />
 
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-1 space-y-4">
@@ -153,6 +152,12 @@ export default function Gramatical() {
                   onChange={(e) => setPalabraForm((p) => ({ ...p, definicion: e.target.value }))}
                   rows={3}
                 />
+                <Input
+                  label={t('gramExampleLabel')}
+                  value={palabraForm.ejemplo}
+                  onChange={(e) => setPalabraForm((p) => ({ ...p, ejemplo: e.target.value }))}
+                  placeholder={t('gramExamplePlaceholder')}
+                />
                 <div className="flex gap-2">
                   <Button variant="primary" size="sm" icon={<Check size={14} />} onClick={savePalabra}>{t('gramSave')}</Button>
                   <Button variant="ghost" size="sm" icon={<X size={14} />} onClick={() => setEditPalabra(false)}>{t('cancel')}</Button>
@@ -162,8 +167,11 @@ export default function Gramatical() {
               <div>
                 <div className="text-xl font-bold text-indigo-700 mb-1">{data.palabraDelDia}</div>
                 <p className="text-sm text-slate-600 leading-relaxed">{data.definicion || t('gramNoDefinition')}</p>
+                {data.ejemplo && (
+                  <p className="mt-2 text-xs text-slate-500 italic border-l-2 border-indigo-200 pl-2 leading-relaxed">"{data.ejemplo}"</p>
+                )}
                 <button
-                  onClick={() => { setEditPalabra(true); setPalabraForm({ palabraDelDia: data.palabraDelDia, definicion: data.definicion }) }}
+                  onClick={() => { setEditPalabra(true); setPalabraForm({ palabraDelDia: data.palabraDelDia, definicion: data.definicion, ejemplo: data.ejemplo ?? '' }) }}
                   className="mt-3 text-xs text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors"
                 >
                   <Pencil size={12} /> {t('gramEditWordOfDay')}
@@ -280,8 +288,12 @@ export default function Gramatical() {
 
           <div className="space-y-2">
             {data.observaciones.length === 0 ? (
-              <div className="bg-white rounded-xl border border-slate-200 p-10 text-center text-slate-400">
-                <p>{t('gramNoObs')}</p>
+              <div className="bg-white rounded-xl border border-slate-200 p-10 flex flex-col items-center gap-2 text-center">
+                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                  <BookOpen size={18} className="text-slate-400" />
+                </div>
+                <p className="text-sm font-semibold text-slate-500">{t('gramNoObs')}</p>
+                <p className="text-xs text-slate-400">{t('gramAddObsHint')}</p>
               </div>
             ) : (
               data.observaciones.map((obs) => (

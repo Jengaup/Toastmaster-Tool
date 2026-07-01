@@ -1,4 +1,5 @@
 import React from 'react'
+import { ChevronDown } from 'lucide-react'
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string
@@ -43,12 +44,17 @@ export function Select({ label, error, hint, className = '', children, ...props 
   return (
     <div className="space-y-1">
       {label && <label className="block text-sm font-medium text-slate-700">{label}</label>}
-      <select
-        className={`${baseInput} bg-white cursor-pointer ${error ? 'border-red-400 focus:ring-red-400' : ''} ${className}`}
-        {...props}
-      >
-        {children}
-      </select>
+      <div className="relative">
+        <select
+          className={`${baseInput} bg-white cursor-pointer appearance-none pr-8 ${error ? 'border-red-400 focus:ring-red-400' : ''} ${className}`}
+          {...props}
+        >
+          {children}
+        </select>
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
+          <ChevronDown size={14} />
+        </div>
+      </div>
       {error && <p className="text-xs text-red-500">{error}</p>}
       {hint && !error && <p className="text-xs text-slate-400">{hint}</p>}
     </div>

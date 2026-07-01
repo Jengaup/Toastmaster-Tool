@@ -15,6 +15,7 @@ import DatosPersonalizados from './views/DatosPersonalizados'
 import ImprimirReporte from './views/ImprimirReporte'
 import EvaluacionesContexto from './views/EvaluacionesContexto'
 import EvaluacionDiscurso from './views/EvaluacionDiscurso'
+import Roles from './views/Roles'
 
 function NotFound() {
   const { t } = useLanguage()
@@ -49,6 +50,7 @@ function AppInner() {
           <Route path="/evaluaciones" element={<EvaluacionesContexto />} />
           <Route path="/eval-discurso" element={<EvaluacionDiscurso />} />
           <Route path="/imprimir" element={<ImprimirReporte />} />
+          <Route path="/roles" element={<Roles />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Layout>

@@ -36,4 +36,5 @@ export const STORAGE_KEYS = {
   EVAL_DISCURSO: 'tm_eval_discurso',
   MEETING_CLOCK: 'tm_meeting_clock',
   MEETING_SEGMENTS: 'tm_meeting_segments',
+  MEETING_ROLES: 'tm_meeting_roles',
 } as const

@@ -22,6 +22,9 @@ export interface TimerRecord {
   tiempoFinal: number
   notas: string
   fecha: string
+  trayecto?: string
+  proyecto?: string
+  titulo?: string
 }
 
 export interface AhParticipant {
@@ -42,8 +45,21 @@ export interface GrammarObservacion {
 export interface GrammarData {
   palabraDelDia: string
   definicion: string
+  ejemplo: string
   observaciones: GrammarObservacion[]
   usosDelDia: Record<string, number>
+}
+
+export interface MeetingRoles {
+  presidente: string
+  toastmaster: string
+  evaluadorGeneral: string
+  monitorMuletillas: string
+  monitorGramatica: string
+  monitorPalabra: string
+  cronometrador: string
+  monitorChat: string
+  sargentoArmas: string
 }
 
 export interface EvalSegmento {

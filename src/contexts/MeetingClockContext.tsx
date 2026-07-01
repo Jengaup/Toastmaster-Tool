@@ -28,6 +28,15 @@ const DEFAULT_SEGMENTS: MeetingSegment[] = [
   { id: 's_cierre',     label: 'Cierre',                startedAt: null, accumulated: 0 },
 ]
 
+const STANDARD_TM_SEGMENTS: MeetingSegment[] = [
+  { id: 'std_social',    label: 'Socialización',             startedAt: null, accumulated: 0 },
+  { id: 'std_apertura',  label: 'Apertura y presentación',   startedAt: null, accumulated: 0 },
+  { id: 'std_topics',    label: 'Tópicos de Mesa',           startedAt: null, accumulated: 0 },
+  { id: 'std_discursos', label: 'Discursos preparados',      startedAt: null, accumulated: 0 },
+  { id: 'std_eval',      label: 'Sección de Evaluación',     startedAt: null, accumulated: 0 },
+  { id: 'std_cierre',    label: 'Cierre y reconocimientos',  startedAt: null, accumulated: 0 },
+]
+
 interface MeetingClockCtx {
   clock: MeetingClockState
   segments: MeetingSegment[]
@@ -46,6 +55,7 @@ interface MeetingClockCtx {
   addSegment: (label: string) => void
   deleteSegment: (id: string) => void
   resetAll: () => void
+  loadStandardAgenda: () => void
 }
 
 const MeetingClockContext = createContext<MeetingClockCtx>(null!)
@@ -112,6 +122,8 @@ export function MeetingClockProvider({ children }: { children: ReactNode }) {
 
   const deleteSegment = (id: string) => saveSegments(segments.filter(s => s.id !== id))
 
+  const loadStandardAgenda = () => saveSegments(STANDARD_TM_SEGMENTS.map(s => ({ ...s })))
+
   const resetAll = () => {
     saveClock(DEFAULT_CLOCK)
     saveSegments(DEFAULT_SEGMENTS)
@@ -122,7 +134,7 @@ export function MeetingClockProvider({ children }: { children: ReactNode }) {
       clock, segments, clockElapsedMs, totalMs, remainingMs,
       isRunning, isOver,
       startMeeting, pauseMeeting, resetMeeting, setDuration,
-      segmentElapsedMs, toggleSegment, resetSegment, addSegment, deleteSegment, resetAll,
+      segmentElapsedMs, toggleSegment, resetSegment, addSegment, deleteSegment, resetAll, loadStandardAgenda,
     }}>
       {children}
     </MeetingClockContext.Provider>

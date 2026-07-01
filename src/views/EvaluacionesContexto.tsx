@@ -7,6 +7,7 @@ import {
 import { STORAGE_KEYS } from '../utils/storage'
 import { Card } from '../components/ui/Card'
 import { Input, Textarea } from '../components/ui/Input'
+import { PageHeader } from '../components/ui/PageHeader'
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
 
@@ -271,10 +272,7 @@ export default function EvaluacionesContexto() {
 
   return (
     <div className="p-4 md:p-8 max-w-3xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">{t('contextTitle')}</h1>
-        <p className="text-slate-500 text-sm mt-1">{t('contextSubtitle')}</p>
-      </div>
+      <PageHeader title={t('contextTitle')} subtitle={t('contextSubtitle')} />
 
       {/* ── Nueva evaluación ── */}
       <div className="mb-6">
@@ -287,15 +285,17 @@ export default function EvaluacionesContexto() {
                 key={opt.tipo}
                 type="button"
                 onClick={() => addInstance(opt.tipo)}
-                className="flex flex-col items-start gap-2 p-4 rounded-xl border-2 border-dashed border-slate-200 bg-white text-left transition-all hover:border-slate-300 hover:bg-slate-50 active:scale-[0.97] group"
+                className={`flex flex-col gap-3 p-5 rounded-xl border bg-white shadow-sm text-left transition-all hover:shadow-md active:scale-[0.97] group ${meta.border}`}
               >
-                <div className="flex items-center gap-2 w-full">
-                  <div className={`p-1.5 rounded-lg ${meta.iconBg}`}>{meta.icon}</div>
-                  <div className="flex-1">
-                    <div className={`font-semibold text-sm ${meta.color}`}>{opt.title}</div>
-                    <div className="text-xs text-slate-400 mt-0.5">{opt.desc}</div>
-                  </div>
-                  <Plus size={15} className="text-slate-300 group-hover:text-slate-500 transition-colors shrink-0" />
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${meta.iconBg}`}>
+                  {meta.icon}
+                </div>
+                <div className="flex-1">
+                  <div className={`font-semibold text-sm ${meta.color}`}>{opt.title}</div>
+                  <div className="text-xs text-slate-400 mt-0.5">{opt.desc}</div>
+                </div>
+                <div className={`flex items-center gap-1 text-xs font-medium ${meta.color} opacity-0 group-hover:opacity-100 transition-opacity`}>
+                  <Plus size={12} /> {t('contextNewEval')}
                 </div>
               </button>
             )

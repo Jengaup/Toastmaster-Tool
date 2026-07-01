@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Play, Pause, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Check, Maximize2, Minimize2, Clock, LayoutList, X } from 'lucide-react'
+import { Play, Pause, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Check, Maximize2, Minimize2, Clock, LayoutList, X, AlertTriangle, ChevronRight, ListOrdered } from 'lucide-react'
 import { useTimer, getPhase, getPhaseColor } from '../hooks/useTimer'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -9,14 +9,15 @@ import { formatTime, secondsToInput, parseTimeInput } from '../utils/formatTime'
 import { STORAGE_KEYS } from '../utils/storage'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
+import { PageHeader } from '../components/ui/PageHeader'
 
 function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2) }
 
 const SPEECH_TYPE_STYLES: Record<SpeechType, { active: string; idle: string }> = {
-  preparado:      { active: 'bg-violet-600 text-white border-violet-600 shadow-sm', idle: 'bg-white text-slate-600 border-slate-200 hover:border-violet-300 hover:text-violet-600 hover:bg-violet-50' },
-  'table-topics': { active: 'bg-pink-600 text-white border-pink-600 shadow-sm',    idle: 'bg-white text-slate-600 border-slate-200 hover:border-pink-300 hover:text-pink-600 hover:bg-pink-50' },
-  evaluacion:     { active: 'bg-sky-600 text-white border-sky-600 shadow-sm',      idle: 'bg-white text-slate-600 border-slate-200 hover:border-sky-300 hover:text-sky-600 hover:bg-sky-50' },
-  personalizado:  { active: 'bg-slate-600 text-white border-slate-600 shadow-sm',  idle: 'bg-white text-slate-600 border-slate-200 hover:border-slate-400 hover:text-slate-800 hover:bg-slate-50' },
+  preparado:      { active: 'bg-white shadow-sm text-violet-700 font-semibold', idle: 'text-slate-500 hover:text-slate-700' },
+  'table-topics': { active: 'bg-white shadow-sm text-pink-600 font-semibold',   idle: 'text-slate-500 hover:text-slate-700' },
+  evaluacion:     { active: 'bg-white shadow-sm text-sky-600 font-semibold',     idle: 'text-slate-500 hover:text-slate-700' },
+  personalizado:  { active: 'bg-white shadow-sm text-slate-700 font-semibold',   idle: 'text-slate-500 hover:text-slate-700' },
 }
 
 const SPEECH_TYPE_FS_BADGE: Record<SpeechType, string> = {
@@ -25,6 +26,13 @@ const SPEECH_TYPE_FS_BADGE: Record<SpeechType, string> = {
   evaluacion:     'bg-sky-900/50 text-sky-300',
   personalizado:  'bg-slate-800 text-slate-300',
 }
+
+const TM_OFFICIAL_RANGES: { label: string; green: number; yellow: number; red: number }[] = [
+  { label: '4-6',   green: 240, yellow: 300, red: 360 },
+  { label: '5-7',   green: 300, yellow: 360, red: 420 },
+  { label: '10-15', green: 600, yellow: 738, red: 900 },
+  { label: '18-20', green: 1080, yellow: 1140, red: 1200 },
+]
 
 const PHASE_VARIANTS = {
   neutral:  'primary',
@@ -55,11 +63,17 @@ export default function Temporizador() {
   const {
     clock, clockElapsedMs, totalMs, remainingMs, isRunning: meetingRunning, isOver,
     startMeeting, pauseMeeting, resetMeeting, setDuration,
-    segments, segmentElapsedMs, toggleSegment, resetSegment, addSegment, deleteSegment,
+    segments, segmentElapsedMs, toggleSegment, resetSegment, addSegment, deleteSegment, loadStandardAgenda,
   } = useMeetingClock()
-  const [showMeeting, setShowMeeting] = useState(true)
-  const [showSegments, setShowSegments] = useState(false)
+  const [showMeeting, setShowMeeting] = useLocalStorage('tm_ui_panel_meeting', true)
+  const [showSegments, setShowSegments] = useLocalStorage('tm_ui_panel_segments', false)
   const [newSegLabel, setNewSegLabel] = useState('')
+  const [confirmReset, setConfirmReset] = useState(false)
+  const [showSpeakerDetails, setShowSpeakerDetails] = useState(false)
+  const [trayecto, setTrayecto] = useState('')
+  const [proyecto, setProyecto] = useState('')
+  const [titulodiscurso, setTituloDiscurso] = useState('')
+  const confirmResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const meetingActive = meetingRunning || clock.pausedElapsed > 0
 
@@ -77,6 +91,18 @@ export default function Temporizador() {
     return () => document.removeEventListener('fullscreenchange', handler)
   }, [])
 
+  const saveRef = useRef<() => void>(() => {})
+  const handleReset = useCallback(() => {
+    if (elapsed > 0 && !confirmReset) {
+      setConfirmReset(true)
+      if (confirmResetTimer.current) clearTimeout(confirmResetTimer.current)
+      confirmResetTimer.current = setTimeout(() => setConfirmReset(false), 3000)
+      return
+    }
+    reset()
+    setConfirmReset(false)
+  }, [elapsed, confirmReset, reset])
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName
@@ -85,14 +111,16 @@ export default function Temporizador() {
         e.preventDefault()
         isRunning ? pause() : start()
       } else if (e.code === 'KeyR') {
-        reset()
+        handleReset()
+      } else if (e.code === 'KeyS') {
+        saveRef.current()
       } else if (e.code === 'KeyF') {
         toggleFullscreen()
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [isRunning, start, pause, reset, toggleFullscreen])
+  }, [isRunning, start, pause, handleReset, toggleFullscreen])
 
   const speechLabels: Record<SpeechType, string> = {
     preparado: t('speechPrepared'),
@@ -106,6 +134,7 @@ export default function Temporizador() {
     verde:    t('timerPhaseGreen'),
     amarillo: t('timerPhaseYellow'),
     rojo:     t('timerPhaseRed'),
+    excedido: t('timerPhaseRed'),
   }
 
   const currentConfig = config[speechType]
@@ -130,32 +159,40 @@ export default function Temporizador() {
     reset()
   }
 
-  const saveToRecord = () => {
+  const saveToRecord = useCallback(() => {
     if (elapsed === 0) return
     const record: TimerRecord = {
       id: newId(),
-      nombre: speakerName.trim() || 'Sin nombre',
+      nombre: speakerName.trim() || t('timerUnnamed'),
       tipo: speechLabels[speechType],
       tiempoFinal: elapsed,
       notas: '',
       fecha: new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US'),
+      ...(trayecto.trim() && { trayecto: trayecto.trim() }),
+      ...(proyecto.trim() && { proyecto: proyecto.trim() }),
+      ...(titulodiscurso.trim() && { titulo: titulodiscurso.trim() }),
     }
     setRecords((prev) => [...prev, record])
     setSavedFeedback(true)
+    setSpeakerName('')
+    setTrayecto('')
+    setProyecto('')
+    setTituloDiscurso('')
+    setShowSpeakerDetails(false)
     setTimeout(() => setSavedFeedback(false), 2000)
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [elapsed, speakerName, speechType, lang, trayecto, proyecto, titulodiscurso])
+
+  useEffect(() => { saveRef.current = saveToRecord }, [saveToRecord])
 
   const startVariant = PHASE_VARIANTS[phase]
 
   return (
     <div className="p-4 md:p-8 max-w-2xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">{t('timerTitle')}</h1>
-        <p className="text-slate-500 text-sm mt-1">{t('timerSubtitle')}</p>
-      </div>
+      <PageHeader title={t('timerTitle')} subtitle={t('timerSubtitle')} />
 
       {/* ── Meeting Clock Panel ─────────────────────────────────────────── */}
-      <div className="mb-4 bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="mb-4 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <button
           onClick={() => setShowMeeting(v => !v)}
           className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
@@ -241,7 +278,7 @@ export default function Temporizador() {
       </div>
 
       {/* ── Meeting Segments Panel ───────────────────────────────────────── */}
-      <div className="mb-6 bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="mb-6 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <button
           onClick={() => setShowSegments(v => !v)}
           className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
@@ -327,18 +364,30 @@ export default function Temporizador() {
                 {t('meetingSegmentAdd')}
               </button>
             </div>
+            {/* Load standard agenda */}
+            <div className="px-5 py-2.5 border-t border-slate-100">
+              <button
+                onClick={() => {
+                  if (window.confirm(t('meetingLoadStandardConfirm'))) loadStandardAgenda()
+                }}
+                className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-indigo-600 transition-colors"
+              >
+                <ListOrdered size={12} />
+                {t('meetingLoadStandard')}
+              </button>
+            </div>
           </div>
         )}
       </div>
 
       {/* ── Speech Timer section label ───────────────────────────────────── */}
       <div className="flex items-center gap-3 mb-4">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider shrink-0">{t('meetingSpeechSection')}</p>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0">{t('meetingSpeechSection')}</p>
         <div className="flex-1 h-px bg-slate-200" />
       </div>
 
-      {/* Speech type selector */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+      {/* Speech type selector — segmented control */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-1 bg-slate-100 rounded-xl p-1 mb-2">
         {(Object.keys(SPEECH_PRESETS) as SpeechType[]).map((type) => {
           const isActive = speechType === type
           const styles = SPEECH_TYPE_STYLES[type]
@@ -346,7 +395,7 @@ export default function Temporizador() {
             <button
               key={type}
               onClick={() => handleSpeechType(type)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border active:scale-[0.97] ${
+              className={`px-3 py-2 rounded-lg text-sm transition-all active:scale-[0.97] ${
                 isActive ? styles.active : styles.idle
               }`}
             >
@@ -356,13 +405,78 @@ export default function Temporizador() {
         })}
       </div>
 
-      {/* Speaker name */}
-      <div className="mb-4">
-        <Input
-          value={speakerName}
-          onChange={(e) => setSpeakerName(e.target.value)}
-          placeholder={t('timerSpeakerPlaceholder')}
-        />
+      {/* Official TM range quick-apply — only for prepared speech */}
+      {speechType === 'preparado' && (
+        <div className="flex items-center gap-2 mb-4 px-1">
+          <span className="text-xs text-slate-400 shrink-0">{t('timerOfficialRanges')}:</span>
+          <div className="flex gap-1.5 flex-wrap">
+            {TM_OFFICIAL_RANGES.map((r) => {
+              const isCurrentRange =
+                config.preparado.greenTime === r.green &&
+                config.preparado.yellowTime === r.yellow &&
+                config.preparado.redTime === r.red
+              return (
+                <button
+                  key={r.label}
+                  onClick={() => setConfig(prev => ({
+                    ...prev,
+                    preparado: { ...prev.preparado, greenTime: r.green, yellowTime: r.yellow, redTime: r.red }
+                  }))}
+                  className={`text-xs px-2.5 py-1 rounded-full font-medium border transition-all ${
+                    isCurrentRange
+                      ? 'bg-violet-100 text-violet-700 border-violet-300'
+                      : 'bg-white text-slate-500 border-slate-200 hover:border-violet-300 hover:text-violet-600'
+                  }`}
+                >
+                  {r.label} min
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+      {speechType !== 'preparado' && <div className="mb-4" />}
+
+      {/* Speaker name + optional details */}
+      <div className="mb-4 space-y-2">
+        <div className="flex gap-2">
+          <Input
+            className="flex-1"
+            value={speakerName}
+            onChange={(e) => setSpeakerName(e.target.value)}
+            placeholder={t('timerSpeakerPlaceholder')}
+          />
+          <button
+            onClick={() => setShowSpeakerDetails(v => !v)}
+            className={`shrink-0 flex items-center gap-1 text-xs px-3 py-2 rounded-lg border transition-all ${
+              showSpeakerDetails
+                ? 'bg-indigo-50 text-indigo-600 border-indigo-200'
+                : 'bg-white text-slate-400 border-slate-200 hover:border-indigo-200 hover:text-indigo-500'
+            }`}
+          >
+            <ChevronRight size={12} className={`transition-transform ${showSpeakerDetails ? 'rotate-90' : ''}`} />
+            {showSpeakerDetails ? t('timerHideSpeakerDetails') : t('timerSpeakerDetails')}
+          </button>
+        </div>
+        {showSpeakerDetails && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pl-1">
+            <Input
+              value={titulodiscurso}
+              onChange={(e) => setTituloDiscurso(e.target.value)}
+              placeholder={t('timerSpeechTitle')}
+            />
+            <Input
+              value={trayecto}
+              onChange={(e) => setTrayecto(e.target.value)}
+              placeholder={t('timerPathway')}
+            />
+            <Input
+              value={proyecto}
+              onChange={(e) => setProyecto(e.target.value)}
+              placeholder={t('timerProject')}
+            />
+          </div>
+        )}
       </div>
 
       {/* Timer card — this element goes fullscreen */}
@@ -371,7 +485,7 @@ export default function Temporizador() {
         className={`flex flex-col items-center transition-colors duration-500 ${
           isFullscreen
             ? 'bg-slate-950 justify-center gap-6 p-10'
-            : 'rounded-2xl border bg-white p-6 md:p-10 gap-5'
+            : 'rounded-2xl border bg-white shadow-lg p-6 md:p-10 gap-5'
         }`}
         style={!isFullscreen ? {
           borderColor: phase !== 'neutral' ? `${color}50` : '#e2e8f0',
@@ -450,6 +564,14 @@ export default function Temporizador() {
           {phaseLabels[phase]}
         </div>
 
+        {/* PAUSED indicator */}
+        {!isRunning && elapsed > 0 && (
+          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 bg-amber-100 px-3 py-1 rounded-full animate-pulse">
+            <Pause size={10} fill="currentColor" />
+            {t('timerPaused')}
+          </div>
+        )}
+
         {/* Controls */}
         <div className="flex gap-3">
           {!isRunning ? (
@@ -471,8 +593,13 @@ export default function Temporizador() {
               {t('timerPause')}
             </Button>
           )}
-          <Button variant="secondary" size="xl" icon={<RotateCcw size={isFullscreen ? 26 : 22} />} onClick={reset}>
-            {t('timerReset')}
+          <Button
+            variant={confirmReset ? 'danger' : 'secondary'}
+            size="xl"
+            icon={confirmReset ? <AlertTriangle size={isFullscreen ? 26 : 22} /> : <RotateCcw size={isFullscreen ? 26 : 22} />}
+            onClick={handleReset}
+          >
+            {confirmReset ? t('timerConfirmReset') : t('timerReset')}
           </Button>
         </div>
 
@@ -492,7 +619,7 @@ export default function Temporizador() {
           {!isFullscreen && (
             <button
               onClick={toggleFullscreen}
-              title="Pantalla completa (F)"
+              title={t('timerFullscreen')}
               className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-700 px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors"
             >
               <Maximize2 size={13} />
@@ -523,7 +650,7 @@ export default function Temporizador() {
       </div>
 
       {/* Config section */}
-      <div className="mt-4 bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="mt-4 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <button
           onClick={() => setShowConfig(!showConfig)}
           className="w-full flex items-center justify-between px-5 py-4 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
@@ -534,7 +661,7 @@ export default function Temporizador() {
 
         {showConfig && (
           <div className="px-5 pb-5 border-t border-slate-100">
-            <div className="grid grid-cols-3 gap-4 pt-4">
+            <div key={speechType} className="grid grid-cols-3 gap-4 pt-4">
               <Input
                 label={t('timerConfigGreenLabel')}
                 defaultValue={secondsToInput(currentConfig.greenTime)}

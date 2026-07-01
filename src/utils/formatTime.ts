@@ -1,8 +1,10 @@
 export function formatTime(seconds: number): string {
   const abs = Math.abs(seconds)
-  const m = Math.floor(abs / 60)
+  const h = Math.floor(abs / 3600)
+  const m = Math.floor((abs % 3600) / 60)
   const s = abs % 60
   const sign = seconds < 0 ? '-' : ''
+  if (h > 0) return `${sign}${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
   return `${sign}${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
