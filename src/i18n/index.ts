@@ -288,6 +288,10 @@ const translations = {
     speechEvalEmergenteLabel: 'Emergente',
     speechEvalDesarrolloLabel: 'En desarrollo',
     printSectionSpeechEval: 'Evaluación de Discurso',
+    printCriterion: 'Criterio',
+    printLevel: 'Nivel',
+    printComment: 'Comentario',
+    printNoDataSub: 'Completa los módulos y vuelve aquí para exportar.',
   },
 
   en: {
@@ -577,6 +581,10 @@ const translations = {
     speechEvalEmergenteLabel: 'Emerging',
     speechEvalDesarrolloLabel: 'Developing',
     printSectionSpeechEval: 'Speech Evaluation',
+    printCriterion: 'Criterion',
+    printLevel: 'Level',
+    printComment: 'Comment',
+    printNoDataSub: 'Complete the modules and come back here to export.',
   },
 } as const
 

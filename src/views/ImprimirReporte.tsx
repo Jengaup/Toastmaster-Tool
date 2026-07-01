@@ -398,7 +398,7 @@ export default function ImprimirReporte() {
                   { label: evalContexto.tipo === 'variedad-vocal' ? t('contextVVTitle') : evalContexto.tipo === 'lenguaje-corporal' ? t('contextLCTitle') : t('contextOrgTitle'), value: '' },
                   { label: t('reportName'), value: evalContexto.nombreOrador },
                   { label: t('contextEvaluador'), value: evalContexto.evaluador },
-                  { label: 'Fecha', value: evalContexto.fecha },
+                  { label: t('speechEvalFecha'), value: evalContexto.fecha },
                 ].map((item, i) => item.value !== undefined ? (
                   <div key={i} className="bg-slate-50 rounded-lg p-3 print:border print:border-slate-200 print:bg-white">
                     <div className="text-xs text-slate-500 font-medium">{item.label}</div>
@@ -506,7 +506,7 @@ export default function ImprimirReporte() {
           const def = EVALUACIONES.find(e => e.id === discursoInstance.data.evaluacionId)
           if (!def) return null
           const d = discursoInstance.data
-          const RATING_LABELS = ['', 'Developing', 'Emerging', 'Accomplished', 'Excels', 'Exemplar']
+          const RATING_LABELS = ['', t('speechEvalDesarrolloLabel'), t('speechEvalEmergenteLabel'), t('speechEvalExperimentadoLabel'), t('speechEvalSobresalienteLabel'), t('speechEvalDestacadoLabel')]
           const hasAnyRating = Object.values(d.ratings).some(r => r.rating !== null)
           const hasComments = d.comments.destacaste || d.comments.trabajar || d.comments.desafio
           if (!hasAnyRating && !hasComments) return null
@@ -549,9 +549,9 @@ export default function ImprimirReporte() {
                       <table className="w-full text-sm border-collapse">
                         <thead>
                           <tr className="border-b-2 border-slate-200">
-                            <th className="text-left py-2 pr-4 text-xs font-semibold text-slate-500 uppercase">Criterio</th>
-                            <th className="text-center py-2 px-2 text-xs font-semibold text-slate-500 uppercase w-24">Nivel</th>
-                            <th className="text-left py-2 pl-2 text-xs font-semibold text-slate-500 uppercase">Comentario</th>
+                            <th className="text-left py-2 pr-4 text-xs font-semibold text-slate-500 uppercase">{t('printCriterion')}</th>
+                            <th className="text-center py-2 px-2 text-xs font-semibold text-slate-500 uppercase w-24">{t('printLevel')}</th>
+                            <th className="text-left py-2 pl-2 text-xs font-semibold text-slate-500 uppercase">{t('printComment')}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -607,7 +607,7 @@ export default function ImprimirReporte() {
           <div className="bg-white rounded-xl border border-dashed border-slate-300 p-16 text-center text-slate-400 print:hidden">
             <Printer size={32} className="mx-auto mb-3 opacity-30" />
             <p className="font-medium">{t('printNoData')}</p>
-            <p className="text-sm mt-1">Completa los módulos y vuelve aquí para exportar.</p>
+            <p className="text-sm mt-1">{t('printNoDataSub')}</p>
           </div>
         )}
       </div>
