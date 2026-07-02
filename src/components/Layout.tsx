@@ -16,7 +16,9 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="no-print">
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      </div>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="lg:hidden print:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 z-10">
@@ -29,7 +31,7 @@ export function Layout({ children }: LayoutProps) {
           <span className="font-semibold text-slate-900 text-sm">{t('appName')}</span>
         </header>
 
-        <MeetingClockBar />
+        <div className="no-print"><MeetingClockBar /></div>
         <main className="flex-1 overflow-y-auto">
           <div key={location.pathname} className="page-enter">
             {children}
