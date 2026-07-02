@@ -37,18 +37,39 @@ const RATING_LABELS_EN = ['', 'Developing', 'Emerging', 'Accomplished', 'Excels'
 const RATING_COLORS = ['', 'bg-red-100 text-red-700 border-red-300', 'bg-orange-100 text-orange-700 border-orange-300', 'bg-yellow-100 text-yellow-700 border-yellow-300', 'bg-green-100 text-green-700 border-green-300', 'bg-emerald-100 text-emerald-800 border-emerald-300']
 const RATING_ACTIVE = ['', 'bg-red-500 text-white border-red-500', 'bg-orange-500 text-white border-orange-500', 'bg-yellow-500 text-white border-yellow-500', 'bg-green-500 text-white border-green-500', 'bg-emerald-600 text-white border-emerald-600']
 
-function EvalPickerButton({ ev, onCreate, showLevel }: { ev: EvalDiscursoDefinition; onCreate: (id: string) => void; showLevel?: boolean }) {
+const CATEGORY_DISPLAY: Record<string, string> = {
+  comunes: 'Comunes', electivos: 'Electivos',
+  paths_activos: 'Paths Activos', paths_legacy: 'Paths Legacy', otros: 'Otros',
+}
+
+function evalContext(ev: EvalDiscursoDefinition): string {
+  const parts: string[] = []
+  if (ev.category) parts.push(CATEGORY_DISPLAY[ev.category] ?? ev.category)
+  if (ev.path) parts.push(ev.path)
+  if (ev.level) parts.push(`L${ev.level}`)
+  return parts.join(' · ')
+}
+
+function EvalPickerButton({ ev, onCreate, showLevel, showContext }: {
+  ev: EvalDiscursoDefinition
+  onCreate: (id: string) => void
+  showLevel?: boolean
+  showContext?: boolean
+}) {
   return (
     <button
       onClick={() => onCreate(ev.id)}
       className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-purple-50 hover:border-purple-200 border border-transparent transition-colors group"
     >
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-sm font-medium text-slate-800 group-hover:text-purple-700 truncate">{ev.title}</div>
-          {ev.duration && <div className="text-xs text-slate-400 mt-0.5">{ev.duration}</div>}
+          {showContext && (
+            <div className="text-xs text-slate-400 mt-0.5">{evalContext(ev)}</div>
+          )}
+          {!showContext && ev.duration && <div className="text-xs text-slate-400 mt-0.5">{ev.duration}</div>}
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
           {showLevel && ev.level && (
             <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-slate-100 text-slate-500">L{ev.level}</span>
           )}
@@ -75,7 +96,16 @@ export default function EvaluacionDiscurso() {
 
   const [showPicker, setShowPicker] = useState(false)
   const [search, setSearch] = useState('')
+  const [langFilter, setLangFilter] = useState<'all' | 'es' | 'en'>('all')
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
   const [expandedCriteria, setExpandedCriteria] = useState<Record<string, boolean>>({})
+
+  const closePicker = () => { setShowPicker(false); setSearch(''); setLangFilter('all'); setCollapsedSections(new Set()) }
+  const toggleSection = (key: string) => setCollapsedSections(prev => {
+    const next = new Set(prev)
+    if (next.has(key)) next.delete(key); else next.add(key)
+    return next
+  })
 
   const activeInstance = store.instances.find(i => i.id === store.activeId) ?? null
   const activeDef = activeInstance ? EVALUACIONES.find(e => e.id === activeInstance.data.evaluacionId) : null
@@ -83,11 +113,15 @@ export default function EvaluacionDiscurso() {
 
   const filteredEvals = useMemo(() => {
     const q = search.toLowerCase()
-    return EVALUACIONES.filter(e => !q || e.title.toLowerCase().includes(q))
-  }, [search])
+    return EVALUACIONES.filter(e => {
+      if (q && !e.title.toLowerCase().includes(q)) return false
+      if (langFilter !== 'all' && e.lang !== langFilter) return false
+      return true
+    })
+  }, [search, langFilter])
 
   type EvalGroup = { key: string; items: EvalDiscursoDefinition[] }
-  type EvalSection = { cat: EvalCategory; label: string; groups: EvalGroup[] }
+  type EvalSection = { cat: EvalCategory; label: string; total: number; groups: EvalGroup[] }
 
   const groupedView = useMemo((): EvalSection[] | null => {
     if (search) return null
@@ -99,7 +133,9 @@ export default function EvaluacionDiscurso() {
       { cat: 'otros',         label: 'Otros',             byPath: false },
     ]
     return SECTIONS.flatMap(({ cat, label, byPath }) => {
-      const evals = EVALUACIONES.filter(e => (e.category ?? 'otros') === cat)
+      const evals = EVALUACIONES.filter(e =>
+        (e.category ?? 'otros') === cat && (langFilter === 'all' || e.lang === langFilter)
+      )
       if (evals.length === 0) return []
       let groups: EvalGroup[]
       if (byPath) {
@@ -128,9 +164,9 @@ export default function EvaluacionDiscurso() {
           })
           .map(([key, items]) => ({ key, items }))
       }
-      return [{ cat, label, groups }]
+      return [{ cat, label, total: evals.length, groups }]
     })
-  }, [search])
+  }, [search, langFilter])
 
   const createInstance = (evaluacionId: string) => {
     const inst: EvalDiscursoInstance = { id: newId(), createdAt: new Date().toISOString(), data: emptyData(evaluacionId) }
@@ -209,18 +245,20 @@ export default function EvaluacionDiscurso() {
       {/* Evaluation picker modal */}
       {showPicker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+            {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <h2 className="font-bold text-slate-900 text-lg flex items-center gap-2">
                 <GraduationCap size={20} className="text-purple-600" />
                 {t('speechEvalChoose')}
               </h2>
-              <button onClick={() => { setShowPicker(false); setSearch('') }} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
+              <button onClick={closePicker} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
                 <X size={18} />
               </button>
             </div>
 
-            <div className="px-5 py-3 border-b border-slate-100">
+            {/* Search + language filter */}
+            <div className="px-5 pt-3 pb-2.5 border-b border-slate-100 space-y-2.5">
               <div className="relative">
                 <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
@@ -232,40 +270,80 @@ export default function EvaluacionDiscurso() {
                   autoFocus
                 />
               </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400 font-medium">Idioma:</span>
+                {(['all', 'es', 'en'] as const).map(l => (
+                  <button
+                    key={l}
+                    onClick={() => setLangFilter(l)}
+                    className={`text-xs px-3 py-1 rounded-full font-medium border transition-colors ${
+                      langFilter === l
+                        ? 'bg-purple-600 text-white border-purple-600'
+                        : 'border-slate-200 text-slate-500 hover:border-purple-300 hover:text-purple-600'
+                    }`}
+                  >
+                    {l === 'all' ? 'Todos' : l.toUpperCase()}
+                  </button>
+                ))}
+                {search && (
+                  <span className="ml-auto text-xs text-slate-400">{filteredEvals.length} resultado{filteredEvals.length !== 1 ? 's' : ''}</span>
+                )}
+              </div>
             </div>
 
+            {/* List */}
             <div className="overflow-y-auto flex-1 px-4 py-3">
               {search ? (
                 filteredEvals.length === 0 ? (
                   <p className="text-center text-slate-400 py-8 text-sm">{t('noResults')}</p>
                 ) : (
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     {filteredEvals.map(ev => (
-                      <EvalPickerButton key={ev.id} ev={ev} onCreate={createInstance} />
+                      <EvalPickerButton key={ev.id} ev={ev} onCreate={createInstance} showContext />
                     ))}
                   </div>
                 )
               ) : groupedView && (
-                <div className="space-y-4">
-                  {groupedView.map(section => (
-                    <div key={section.cat}>
-                      <div className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1 mb-2">{section.label}</div>
-                      <div className="space-y-3">
-                        {section.groups.map(group => (
-                          <div key={group.key}>
-                            {group.key && (
-                              <div className="text-xs font-semibold text-purple-600 px-1 mb-1">{group.key}</div>
-                            )}
-                            <div className="space-y-0.5">
-                              {group.items.map(ev => (
-                                <EvalPickerButton key={ev.id} ev={ev} onCreate={createInstance} showLevel />
-                              ))}
-                            </div>
+                <div className="space-y-1">
+                  {groupedView.map(section => {
+                    const collapsed = collapsedSections.has(section.cat)
+                    return (
+                      <div key={section.cat} className="rounded-xl overflow-hidden border border-slate-100">
+                        {/* Section header — clickable to collapse */}
+                        <button
+                          onClick={() => toggleSection(section.cat)}
+                          className="w-full flex items-center justify-between px-3 py-2.5 bg-slate-50 hover:bg-slate-100 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">{section.label}</span>
+                            <span className="text-xs text-slate-400 font-medium">{section.total}</span>
                           </div>
-                        ))}
+                          {collapsed ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronUp size={14} className="text-slate-400" />}
+                        </button>
+
+                        {/* Section body */}
+                        {!collapsed && (
+                          <div className="px-2 py-2 space-y-3">
+                            {section.groups.map(group => (
+                              <div key={group.key}>
+                                {group.key && (
+                                  <div className="flex items-center gap-2 px-1 mb-1">
+                                    <div className="w-1 h-3.5 rounded-full bg-purple-300" />
+                                    <span className="text-xs font-semibold text-purple-700">{group.key}</span>
+                                  </div>
+                                )}
+                                <div className="space-y-0.5">
+                                  {group.items.map(ev => (
+                                    <EvalPickerButton key={ev.id} ev={ev} onCreate={createInstance} showLevel />
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
