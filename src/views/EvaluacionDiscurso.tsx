@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import {
   GraduationCap, Plus, Trash2, Bookmark, BookmarkCheck, Search, X, ChevronDown, ChevronUp,
-  ClipboardList,
+  ClipboardList, FileDown,
 } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -31,8 +31,8 @@ function emptyData(evaluacionId: string): EvalDiscursoData {
   }
 }
 
-const RATING_LABELS_ES = ['', 'En desarrollo', 'Emergente', 'Experimentado', 'Sobresaliente', 'Destacado']
-const RATING_LABELS_EN = ['', 'Developing', 'Emerging', 'Accomplished', 'Excels', 'Exemplar']
+const RATING_LABELS_ES = ['', 'En desarrollo', 'Emergente', 'Experimentado', 'Destacado', 'Ejemplar']
+const RATING_LABELS_EN = ['', 'Developing', 'Emerging', 'Accomplished', 'Excels', 'Exemplary']
 const RATING_COLORS = ['', 'bg-red-100 text-red-700 border-red-300', 'bg-orange-100 text-orange-700 border-orange-300', 'bg-yellow-100 text-yellow-700 border-yellow-300', 'bg-green-100 text-green-700 border-green-300', 'bg-emerald-100 text-emerald-800 border-emerald-300']
 const RATING_ACTIVE = ['', 'bg-red-500 text-white border-red-500', 'bg-orange-500 text-white border-orange-500', 'bg-yellow-500 text-white border-yellow-500', 'bg-green-500 text-white border-green-500', 'bg-emerald-600 text-white border-emerald-600']
 
@@ -117,15 +117,24 @@ export default function EvaluacionDiscurso() {
 
   const toggleCriteria = (id: string) => setExpandedCriteria(p => ({ ...p, [id]: !p[id] }))
 
+  const handlePrint = () => window.print()
+
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
       <PageHeader
         title={t('speechEvalTitle')}
         subtitle={t('speechEvalSubtitle')}
         action={
-          <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setShowPicker(true)}>
-            {t('speechEvalNew')}
-          </Button>
+          <div className="flex gap-2">
+            {activeInstance && activeDef && (
+              <Button variant="secondary" size="sm" icon={<FileDown size={14} />} onClick={handlePrint} className="no-print">
+                {t('speechEvalPdf')}
+              </Button>
+            )}
+            <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setShowPicker(true)} className="no-print">
+              {t('speechEvalNew')}
+            </Button>
+          </div>
         }
       />
 
@@ -224,9 +233,23 @@ export default function EvaluacionDiscurso() {
 
       {/* Form */}
       {activeInstance && activeDef ? (
-        <>
+        <div id="eval-print-area">
+          {/* Print header — only visible when printing */}
+          <div className="hidden print:block mb-6 border-b-2 border-slate-800 pb-3">
+            <h1 className="text-xl font-bold text-slate-900">FORMULARIO DE EVALUACIÓN</h1>
+            <p className="text-base font-semibold text-slate-700 mt-1">{activeDef.title}</p>
+            {activeDef.duration && <p className="text-sm text-slate-500">Duración del discurso: {activeDef.duration}</p>}
+          </div>
+
+          {/* Rating scale legend — only in print */}
+          <div className="hidden print:flex gap-4 mb-5 text-xs font-semibold">
+            {[5,4,3,2,1].map(n => (
+              <span key={n}><span className="font-bold">{n}</span> = {RATING_LABELS_ES[n]}</span>
+            ))}
+          </div>
+
           {/* Report badge */}
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between no-print">
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-slate-700">{activeDef.title}</span>
               {activeDef.duration && <span className="text-xs text-slate-400">· {activeDef.duration}</span>}
@@ -336,7 +359,7 @@ export default function EvaluacionDiscurso() {
                       )}
 
                       {/* Rating buttons */}
-                      <div className="flex gap-1.5 mb-3">
+                      <div className="flex gap-1.5 mb-3 no-print">
                         {[1, 2, 3, 4, 5].map(n => (
                           <button
                             key={n}
@@ -346,6 +369,17 @@ export default function EvaluacionDiscurso() {
                           >
                             {n}
                           </button>
+                        ))}
+                      </div>
+                      {/* Print-only score display */}
+                      <div className="hidden print:flex gap-1.5 mb-3">
+                        {[1, 2, 3, 4, 5].map(n => (
+                          <div
+                            key={n}
+                            className={`flex-1 py-1 text-center text-xs font-bold border-2 rounded ${rating.rating === n ? 'border-slate-800 bg-slate-800 text-white' : 'border-slate-300 text-slate-400'}`}
+                          >
+                            {n}
+                          </div>
                         ))}
                       </div>
 
@@ -363,7 +397,7 @@ export default function EvaluacionDiscurso() {
               })}
             </div>
           </Card>
-        </>
+        </div>
       ) : (
         <Card>
           <div className="flex flex-col items-center justify-center py-16 gap-3">

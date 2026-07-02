@@ -71,3 +71,41 @@
 .page-enter {
   animation: page-enter 0.18s ease-out both;
 }
+
+@media print {
+  /* Hide everything except the evaluation form */
+  nav, aside, header, footer,
+  [data-sidebar], .no-print {
+    display: none !important;
+  }
+
+  /* Reset layout so the form takes full width */
+  body {
+    background: white !important;
+    font-size: 11pt;
+  }
+
+  /* Hide the saved-instances list and keep only the active form */
+  #eval-print-area ~ * {
+    display: none !important;
+  }
+
+  /* Make cards look clean on paper */
+  .shadow-sm, .shadow-lg, .shadow-2xl {
+    box-shadow: none !important;
+  }
+
+  /* Avoid page breaks inside criteria cards */
+  .rounded-xl {
+    border-radius: 0 !important;
+    page-break-inside: avoid;
+  }
+
+  /* Show textareas' content as plain text */
+  textarea {
+    border: 1px solid #ccc !important;
+    resize: none;
+  }
+
+  a { text-decoration: none; }
+}
