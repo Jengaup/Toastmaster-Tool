@@ -172,6 +172,8 @@ export interface EvalCriterion {
   description?: string
 }
 
+export type EvalCategory = 'comunes' | 'electivos' | 'paths_activos' | 'paths_legacy' | 'otros'
+
 export interface EvalDiscursoDefinition {
   id: string
   fileId: string
@@ -179,6 +181,9 @@ export interface EvalDiscursoDefinition {
   lang: 'es' | 'en'
   duration?: string
   criteria: EvalCriterion[]
+  category?: EvalCategory
+  path?: string
+  level?: number
 }
 
 export interface EvalDiscursoHeader {
