@@ -218,18 +218,28 @@ export default function Temporizador() {
         {showMeeting && (
           <div className="px-5 pb-5 border-t border-slate-100">
             {/* Duration row */}
-            <div className="flex items-center gap-3 pt-4 mb-5">
-              <span className="text-xs font-medium text-slate-500 shrink-0">{t('meetingDuration')}:</span>
-              <input
-                type="number"
-                min={1}
-                max={300}
-                value={clock.durationMins}
-                onChange={e => setDuration(Math.max(1, parseInt(e.target.value) || 1))}
-                disabled={meetingRunning}
-                className="w-20 px-2 py-1 border border-slate-200 rounded-lg text-sm text-center font-mono focus:outline-none focus:ring-2 focus:ring-indigo-300 disabled:opacity-50"
-              />
-              <span className="text-xs text-slate-400">{t('meetingDurationMins')}</span>
+            <div className="pt-4 mb-5">
+              <span className="text-xs font-medium text-slate-500 block mb-2">{t('meetingDuration')}:</span>
+              <div className="flex gap-2">
+                {([30, 60, 90, 120] as const).map(mins => {
+                  const label = mins < 60 ? `${mins}'` : mins % 60 === 0 ? `${mins / 60}h` : `${Math.floor(mins / 60)}:30h`
+                  const active = clock.durationMins === mins
+                  return (
+                    <button
+                      key={mins}
+                      onClick={() => setDuration(mins)}
+                      disabled={meetingRunning}
+                      className={`flex-1 py-2 text-sm font-semibold rounded-xl border-2 transition-all ${
+                        active
+                          ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                          : 'border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600'
+                      } disabled:opacity-40 disabled:cursor-not-allowed`}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             {/* Countdown display */}
