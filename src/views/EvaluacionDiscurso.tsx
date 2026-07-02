@@ -7,6 +7,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useLanguage } from '../contexts/LanguageContext'
 import {
   EvalDiscursoStore, EvalDiscursoInstance, EvalDiscursoData, EvalDiscursoRating,
+  EvalCategory, EvalDiscursoDefinition,
 } from '../types'
 import { STORAGE_KEYS } from '../utils/storage'
 import { EVALUACIONES } from '../data/evaluaciones'
@@ -36,6 +37,30 @@ const RATING_LABELS_EN = ['', 'Developing', 'Emerging', 'Accomplished', 'Excels'
 const RATING_COLORS = ['', 'bg-red-100 text-red-700 border-red-300', 'bg-orange-100 text-orange-700 border-orange-300', 'bg-yellow-100 text-yellow-700 border-yellow-300', 'bg-green-100 text-green-700 border-green-300', 'bg-emerald-100 text-emerald-800 border-emerald-300']
 const RATING_ACTIVE = ['', 'bg-red-500 text-white border-red-500', 'bg-orange-500 text-white border-orange-500', 'bg-yellow-500 text-white border-yellow-500', 'bg-green-500 text-white border-green-500', 'bg-emerald-600 text-white border-emerald-600']
 
+function EvalPickerButton({ ev, onCreate, showLevel }: { ev: EvalDiscursoDefinition; onCreate: (id: string) => void; showLevel?: boolean }) {
+  return (
+    <button
+      onClick={() => onCreate(ev.id)}
+      className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-purple-50 hover:border-purple-200 border border-transparent transition-colors group"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-sm font-medium text-slate-800 group-hover:text-purple-700 truncate">{ev.title}</div>
+          {ev.duration && <div className="text-xs text-slate-400 mt-0.5">{ev.duration}</div>}
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {showLevel && ev.level && (
+            <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-slate-100 text-slate-500">L{ev.level}</span>
+          )}
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ev.lang === 'es' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'}`}>
+            {ev.lang.toUpperCase()}
+          </span>
+        </div>
+      </div>
+    </button>
+  )
+}
+
 function instanceLabel(inst: EvalDiscursoInstance): string {
   const def = EVALUACIONES.find(e => e.id === inst.data.evaluacionId)
   const title = def?.title ?? inst.data.evaluacionId
@@ -58,9 +83,52 @@ export default function EvaluacionDiscurso() {
 
   const filteredEvals = useMemo(() => {
     const q = search.toLowerCase()
-    return EVALUACIONES.filter(e => {
-      if (q && !e.title.toLowerCase().includes(q)) return false
-      return true
+    return EVALUACIONES.filter(e => !q || e.title.toLowerCase().includes(q))
+  }, [search])
+
+  type EvalGroup = { key: string; items: EvalDiscursoDefinition[] }
+  type EvalSection = { cat: EvalCategory; label: string; groups: EvalGroup[] }
+
+  const groupedView = useMemo((): EvalSection[] | null => {
+    if (search) return null
+    const SECTIONS: { cat: EvalCategory; label: string; byPath: boolean }[] = [
+      { cat: 'comunes',       label: '0 · Comunes',       byPath: false },
+      { cat: 'electivos',     label: '1 · Electivos',     byPath: false },
+      { cat: 'paths_activos', label: '2 · Paths Activos', byPath: true  },
+      { cat: 'paths_legacy',  label: '3 · Paths Legacy',  byPath: true  },
+      { cat: 'otros',         label: 'Otros',             byPath: false },
+    ]
+    return SECTIONS.flatMap(({ cat, label, byPath }) => {
+      const evals = EVALUACIONES.filter(e => (e.category ?? 'otros') === cat)
+      if (evals.length === 0) return []
+      let groups: EvalGroup[]
+      if (byPath) {
+        const map = new Map<string, EvalDiscursoDefinition[]>()
+        evals.forEach(e => {
+          const k = e.path ?? 'Otros'
+          if (!map.has(k)) map.set(k, [])
+          map.get(k)!.push(e)
+        })
+        groups = [...map.entries()]
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, items]) => ({ key, items: items.sort((a, b) => (a.level ?? 0) - (b.level ?? 0)) }))
+      } else {
+        const map = new Map<string, EvalDiscursoDefinition[]>()
+        evals.forEach(e => {
+          const k = e.level ? `Nivel ${e.level}` : ''
+          if (!map.has(k)) map.set(k, [])
+          map.get(k)!.push(e)
+        })
+        groups = [...map.entries()]
+          .sort(([a], [b]) => {
+            if (!a && !b) return 0
+            if (!a) return 1
+            if (!b) return -1
+            return (parseInt(a.split(' ')[1]) || 99) - (parseInt(b.split(' ')[1]) || 99)
+          })
+          .map(([key, items]) => ({ key, items }))
+      }
+      return [{ cat, label, groups }]
     })
   }, [search])
 
@@ -152,7 +220,7 @@ export default function EvaluacionDiscurso() {
               </button>
             </div>
 
-            <div className="px-5 py-3 border-b border-slate-100 space-y-2">
+            <div className="px-5 py-3 border-b border-slate-100">
               <div className="relative">
                 <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
@@ -164,31 +232,42 @@ export default function EvaluacionDiscurso() {
                   autoFocus
                 />
               </div>
-              <div className="flex justify-end">
-                <span className="text-xs text-slate-400">{filteredEvals.length} evaluaciones</span>
-              </div>
             </div>
 
-            <div className="overflow-y-auto flex-1 px-4 py-3 space-y-1">
-              {filteredEvals.length === 0 ? (
-                <p className="text-center text-slate-400 py-8 text-sm">{t('noResults')}</p>
-              ) : filteredEvals.map(ev => (
-                <button
-                  key={ev.id}
-                  onClick={() => createInstance(ev.id)}
-                  className="w-full text-left px-4 py-3 rounded-xl hover:bg-purple-50 hover:border-purple-200 border border-transparent transition-colors group"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="text-sm font-medium text-slate-800 group-hover:text-purple-700">{ev.title}</div>
-                      {ev.duration && <div className="text-xs text-slate-400 mt-0.5">{ev.duration}</div>}
-                    </div>
-                    <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${ev.lang === 'es' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'}`}>
-                      {ev.lang.toUpperCase()}
-                    </span>
+            <div className="overflow-y-auto flex-1 px-4 py-3">
+              {search ? (
+                filteredEvals.length === 0 ? (
+                  <p className="text-center text-slate-400 py-8 text-sm">{t('noResults')}</p>
+                ) : (
+                  <div className="space-y-1">
+                    {filteredEvals.map(ev => (
+                      <EvalPickerButton key={ev.id} ev={ev} onCreate={createInstance} />
+                    ))}
                   </div>
-                </button>
-              ))}
+                )
+              ) : groupedView && (
+                <div className="space-y-4">
+                  {groupedView.map(section => (
+                    <div key={section.cat}>
+                      <div className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1 mb-2">{section.label}</div>
+                      <div className="space-y-3">
+                        {section.groups.map(group => (
+                          <div key={group.key}>
+                            {group.key && (
+                              <div className="text-xs font-semibold text-purple-600 px-1 mb-1">{group.key}</div>
+                            )}
+                            <div className="space-y-0.5">
+                              {group.items.map(ev => (
+                                <EvalPickerButton key={ev.id} ev={ev} onCreate={createInstance} showLevel />
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
