@@ -79,10 +79,22 @@
     display: none !important;
   }
 
-  /* Reset layout so the form takes full width */
-  body {
+  /* Break the h-screen / overflow-hidden / overflow-y-auto chain so content
+     can flow across multiple pages instead of clipping to viewport height */
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
     background: white !important;
     font-size: 11pt;
+  }
+
+  body > div,
+  body > div > div,
+  main {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    flex: none !important;
   }
 
   /* Hide the saved-instances list and keep only the active form */
@@ -95,10 +107,10 @@
     box-shadow: none !important;
   }
 
-  /* Avoid page breaks inside criteria cards */
+  /* Don't break inside criteria cards, but allow breaks between them */
   .rounded-xl {
     border-radius: 0 !important;
-    page-break-inside: avoid;
+    break-inside: avoid;
   }
 
   /* Show textareas' content as plain text */
