@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Timer, ClipboardList, MessageSquare, BookOpen, Star, Settings, X, Mic, Printer, Lock, Trash2, RotateCcw, FileCheck2, GraduationCap, Users } from 'lucide-react'
+import { Timer, ClipboardList, MessageSquare, BookOpen, Star, Settings, X, Printer, Lock, Trash2, RotateCcw, FileCheck2, GraduationCap, Users } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { TKey } from '../i18n'
 import { hasPinEnabled, savePin, removePin, lockApp } from '../utils/pin'
@@ -10,20 +10,26 @@ interface NavItem {
   path: string
   labelKey: TKey
   icon: React.ReactNode
-  activeBg: string
+  group: 'meeting' | 'eval' | 'settings'
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { path: '/temporizador',  labelKey: 'navTimer',       icon: <Timer size={18} />,         activeBg: 'bg-emerald-600' },
-  { path: '/reporte',       labelKey: 'navReport',      icon: <ClipboardList size={18} />, activeBg: 'bg-sky-600'    },
-  { path: '/ah-counter',    labelKey: 'navAhCounter',   icon: <MessageSquare size={18} />, activeBg: 'bg-orange-500' },
-  { path: '/gramatical',    labelKey: 'navGrammar',     icon: <BookOpen size={18} />,      activeBg: 'bg-violet-600' },
-  { path: '/eval-discurso', labelKey: 'navSpeechEval',  icon: <GraduationCap size={18} />, activeBg: 'bg-purple-600' },
-  { path: '/evaluaciones',  labelKey: 'navContextEval',  icon: <FileCheck2 size={18} />,     activeBg: 'bg-teal-600'   },
-  { path: '/evaluador',     labelKey: 'navEvaluator',    icon: <Star size={18} />,          activeBg: 'bg-amber-500'  },
-  { path: '/imprimir',      labelKey: 'navPrint',       icon: <Printer size={18} />,       activeBg: 'bg-indigo-600' },
-  { path: '/personalizado', labelKey: 'navCustom',      icon: <Settings size={18} />,      activeBg: 'bg-slate-500'  },
-  { path: '/roles',         labelKey: 'navRoles',       icon: <Users size={18} />,         activeBg: 'bg-rose-600'   },
+  { path: '/temporizador',  labelKey: 'navTimer',       icon: <Timer size={18} />,         group: 'meeting'  },
+  { path: '/reporte',       labelKey: 'navReport',      icon: <ClipboardList size={18} />, group: 'meeting'  },
+  { path: '/ah-counter',    labelKey: 'navAhCounter',   icon: <MessageSquare size={18} />, group: 'meeting'  },
+  { path: '/gramatical',    labelKey: 'navGrammar',     icon: <BookOpen size={18} />,      group: 'meeting'  },
+  { path: '/roles',         labelKey: 'navRoles',       icon: <Users size={18} />,         group: 'meeting'  },
+  { path: '/eval-discurso', labelKey: 'navSpeechEval',  icon: <GraduationCap size={18} />, group: 'eval'     },
+  { path: '/evaluaciones',  labelKey: 'navContextEval', icon: <FileCheck2 size={18} />,    group: 'eval'     },
+  { path: '/evaluador',     labelKey: 'navEvaluator',   icon: <Star size={18} />,          group: 'eval'     },
+  { path: '/imprimir',      labelKey: 'navPrint',       icon: <Printer size={18} />,       group: 'settings' },
+  { path: '/personalizado', labelKey: 'navCustom',      icon: <Settings size={18} />,      group: 'settings' },
+]
+
+const NAV_GROUPS: { key: NavItem['group']; label: string }[] = [
+  { key: 'meeting',  label: 'Reunión'       },
+  { key: 'eval',     label: 'Evaluaciones'  },
+  { key: 'settings', label: 'Configuración' },
 ]
 
 interface SidebarProps {
@@ -92,8 +98,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       >
         <div className="flex items-center justify-between px-5 py-5 border-b border-slate-700/50">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <Mic size={16} className="text-white" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center gap-0.5 bg-slate-800 border border-slate-700/60 shrink-0">
+              <span className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_6px_theme(colors.green.400)]" />
+              <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_theme(colors.amber.400)]" />
+              <span className="w-2 h-2 rounded-full bg-red-400 shadow-[0_0_6px_theme(colors.red.400)]" />
             </div>
             <div>
               <div className="text-white font-bold text-sm leading-none">TM Meeting</div>
@@ -108,23 +116,35 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </button>
         </div>
 
-        <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-1">
-          {NAV_ITEMS.map((item) => {
-            const isActive = location.pathname === item.path || (location.pathname === '/' && item.path === '/temporizador')
+        <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-4">
+          {NAV_GROUPS.map(group => {
+            const items = NAV_ITEMS.filter(i => i.group === group.key)
             return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={onClose}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 group ${
-                  isActive
-                    ? `${item.activeBg} text-white`
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
-                }`}
-              >
-                <span className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}>{item.icon}</span>
-                <span className="font-medium">{t(item.labelKey)}</span>
-              </NavLink>
+              <div key={group.key}>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 px-3 mb-1">
+                  {group.label}
+                </p>
+                <div className="space-y-0.5">
+                  {items.map((item) => {
+                    const isActive = location.pathname === item.path || (location.pathname === '/' && item.path === '/temporizador')
+                    return (
+                      <NavLink
+                        key={item.path}
+                        to={item.path}
+                        onClick={onClose}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150 group ${
+                          isActive
+                            ? 'bg-indigo-600/20 text-white'
+                            : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                        }`}
+                      >
+                        <span className={isActive ? 'text-indigo-400' : 'text-slate-400 group-hover:text-slate-200'}>{item.icon}</span>
+                        <span className="font-medium">{t(item.labelKey)}</span>
+                      </NavLink>
+                    )
+                  })}
+                </div>
+              </div>
             )
           })}
         </nav>
