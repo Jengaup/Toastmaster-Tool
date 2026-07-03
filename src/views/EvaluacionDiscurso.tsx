@@ -97,10 +97,13 @@ export default function EvaluacionDiscurso() {
   const [showPicker, setShowPicker] = useState(false)
   const [search, setSearch] = useState('')
   const [langFilter, setLangFilter] = useState<'all' | 'es' | 'en'>('all')
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
+    new Set(['comunes', 'electivos', 'paths_activos', 'paths_legacy', 'otros'])
+  )
   const [expandedCriteria, setExpandedCriteria] = useState<Record<string, boolean>>({})
 
-  const closePicker = () => { setShowPicker(false); setSearch(''); setLangFilter('all'); setCollapsedSections(new Set()) }
+  const ALL_COLLAPSED = new Set(['comunes', 'electivos', 'paths_activos', 'paths_legacy', 'otros'])
+  const closePicker = () => { setShowPicker(false); setSearch(''); setLangFilter('all'); setCollapsedSections(new Set(ALL_COLLAPSED)) }
   const toggleSection = (key: string) => setCollapsedSections(prev => {
     const next = new Set(prev)
     if (next.has(key)) next.delete(key); else next.add(key)
