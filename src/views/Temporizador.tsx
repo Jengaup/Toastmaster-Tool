@@ -30,7 +30,7 @@ const SPEECH_TYPE_FS_BADGE: Record<SpeechType, string> = {
 const TM_OFFICIAL_RANGES: { label: string; green: number; yellow: number; red: number }[] = [
   { label: '4-6',   green: 240, yellow: 300, red: 360 },
   { label: '5-7',   green: 300, yellow: 360, red: 420 },
-  { label: '10-15', green: 600, yellow: 738, red: 900 },
+  { label: '10-15', green: 600, yellow: 720, red: 900 },
   { label: '18-20', green: 1080, yellow: 1140, red: 1200 },
 ]
 
