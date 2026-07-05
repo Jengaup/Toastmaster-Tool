@@ -61,6 +61,7 @@ export default function DatosPersonalizados() {
   }
 
   const handleDelete = (id: string) => {
+    if (!window.confirm(t('confirmDelete'))) return
     setCampos((prev) => prev.filter((c) => c.id !== id))
     if (editId === id) { setEditId(null); setShowForm(false) }
   }

@@ -8,6 +8,7 @@ import { DEFAULT_EVAL_STORE } from './EvaluacionesContexto'
 import { DEFAULT_EVAL_DISCURSO_STORE } from './EvaluacionDiscurso'
 import { EVALUACIONES } from '../data/evaluaciones'
 import { STORAGE_KEYS } from '../utils/storage'
+import { speechTypeKey } from '../utils/speechType'
 import { formatTime } from '../utils/formatTime'
 import { getPhase, getPhaseColor } from '../hooks/useTimer'
 import { copyToClipboard } from '../utils/export'
@@ -39,11 +40,6 @@ const DEFAULT_TIMER_CONFIG: Record<SpeechType, TimerConfig> = {
   personalizado:  SPEECH_PRESETS.personalizado,
 }
 
-function speechTypeKey(tipoLabel: string): SpeechType | null {
-  const entry = Object.entries(SPEECH_PRESETS).find(([, p]) => p.label === tipoLabel)
-  return entry ? (entry[0] as SpeechType) : null
-}
-
 export default function ImprimirReporte() {
   const { t } = useLanguage()
   const [timerRecords] = useLocalStorage<TimerRecord[]>(STORAGE_KEYS.TIMER_RECORDS, [])
@@ -55,7 +51,7 @@ export default function ImprimirReporte() {
   const [timerConfig] = useLocalStorage<Record<SpeechType, TimerConfig>>(STORAGE_KEYS.TIMER_CONFIG, DEFAULT_TIMER_CONFIG)
 
   const getTimeColor = (r: TimerRecord): string => {
-    const key = speechTypeKey(r.tipo)
+    const key = speechTypeKey(r)
     if (!key) return '#94a3b8'
     const cfg = timerConfig[key] ?? SPEECH_PRESETS[key]
     return getPhaseColor(getPhase(r.tiempoFinal, cfg))

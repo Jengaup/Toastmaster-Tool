@@ -37,4 +37,5 @@ export const STORAGE_KEYS = {
   MEETING_CLOCK: 'tm_meeting_clock',
   MEETING_SEGMENTS: 'tm_meeting_segments',
   MEETING_ROLES: 'tm_meeting_roles',
+  SOUND_ENABLED: 'tm_sound_enabled',
 } as const

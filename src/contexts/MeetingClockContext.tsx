@@ -99,7 +99,10 @@ export function MeetingClockProvider({ children }: { children: ReactNode }) {
 
   const startMeeting = () => { if (!isRunning) saveClock({ ...clock, startedAt: Date.now() }) }
   const pauseMeeting = () => { if (isRunning) saveClock({ ...clock, startedAt: null, pausedElapsed: clockElapsedMs }) }
-  const resetMeeting = () => saveClock({ ...clock, startedAt: null, pausedElapsed: 0 })
+  const resetMeeting = () => {
+    saveClock({ ...clock, startedAt: null, pausedElapsed: 0 })
+    saveSegments(segments.map(s => ({ ...s, startedAt: null, accumulated: 0 })))
+  }
   const setDuration = (mins: number) => { if (!isRunning) saveClock({ ...clock, durationMins: mins }) }
 
   const segmentElapsedMs = useCallback((seg: MeetingSegment): number =>

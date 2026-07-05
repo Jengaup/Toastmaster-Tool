@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Play, Pause, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Check, Maximize2, Minimize2, Clock, LayoutList, X, AlertTriangle, ChevronRight, ListOrdered } from 'lucide-react'
+import { Play, Pause, RotateCcw, ChevronDown, ChevronUp, BookmarkPlus, Check, Maximize2, Minimize2, Clock, LayoutList, X, AlertTriangle, ChevronRight, ListOrdered, Volume2, VolumeX } from 'lucide-react'
 import { useTimer, getPhase, getPhaseColor } from '../hooks/useTimer'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -7,6 +7,7 @@ import { useMeetingClock } from '../contexts/MeetingClockContext'
 import { SpeechType, SPEECH_PRESETS, TimerConfig, TimerRecord } from '../types'
 import { formatTime, secondsToInput, parseTimeInput } from '../utils/formatTime'
 import { STORAGE_KEYS } from '../utils/storage'
+import { soundEnabled, setSoundEnabled, playPhaseSound, playMeetingOverSound } from '../utils/sounds'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { PageHeader } from '../components/ui/PageHeader'
@@ -57,7 +58,15 @@ export default function Temporizador() {
   const [speakerName, setSpeakerName] = useState('')
   const [savedFeedback, setSavedFeedback] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [soundOn, setSoundOn] = useState(soundEnabled)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const toggleSound = () => {
+    const next = !soundOn
+    setSoundOn(next)
+    setSoundEnabled(next)
+    if (next) playPhaseSound('verde') // beep de confirmación y desbloqueo del AudioContext
+  }
 
   // Meeting clock
   const {
@@ -146,6 +155,22 @@ export default function Temporizador() {
   const yellowFrac = currentConfig.yellowTime / currentConfig.redTime
   const timerColor = phase === 'neutral' ? (isFullscreen ? '#475569' : '#94a3b8') : color
 
+  // Beep al cruzar cada umbral del semáforo
+  const prevPhaseRef = useRef(phase)
+  useEffect(() => {
+    const prev = prevPhaseRef.current
+    prevPhaseRef.current = phase
+    if (phase === prev || phase === 'neutral' || !isRunning) return
+    if (phase === 'verde' || phase === 'amarillo' || phase === 'rojo') playPhaseSound(phase)
+  }, [phase, isRunning])
+
+  // Alarma cuando se agota el reloj de la reunión
+  const prevOverRef = useRef(isOver)
+  useEffect(() => {
+    if (isOver && !prevOverRef.current) playMeetingOverSound()
+    prevOverRef.current = isOver
+  }, [isOver])
+
   const updateConfig = (field: keyof TimerConfig, rawValue: string) => {
     const val = parseTimeInput(rawValue)
     setConfig((prev) => ({
@@ -165,6 +190,7 @@ export default function Temporizador() {
       id: newId(),
       nombre: speakerName.trim() || t('timerUnnamed'),
       tipo: speechLabels[speechType],
+      tipoKey: speechType,
       tiempoFinal: elapsed,
       notas: '',
       fecha: new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US'),
@@ -670,6 +696,20 @@ export default function Temporizador() {
               {savedFeedback ? t('timerSaved') : t('timerSave')}
             </Button>
           )}
+          <button
+            onClick={toggleSound}
+            title={soundOn ? t('timerSoundOn') : t('timerSoundOff')}
+            aria-label={soundOn ? t('timerSoundOn') : t('timerSoundOff')}
+            className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg transition-colors ${
+              soundOn
+                ? 'text-indigo-500 hover:text-indigo-700 ' + (isFullscreen ? 'hover:bg-slate-800' : 'hover:bg-indigo-50')
+                : isFullscreen
+                  ? 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'
+                  : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            {soundOn ? <Volume2 size={13} /> : <VolumeX size={13} />}
+          </button>
           {!isFullscreen && (
             <button
               onClick={toggleFullscreen}
