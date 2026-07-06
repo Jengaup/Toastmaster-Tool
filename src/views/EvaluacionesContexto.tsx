@@ -235,13 +235,15 @@ export default function EvaluacionesContexto() {
   const toggleReport = (id: string) =>
     setStore(s => ({ ...s, reportId: s.reportId === id ? null : id }))
 
-  const deleteInst = (id: string) =>
+  const deleteInst = (id: string) => {
+    if (!window.confirm(t('confirmDelete'))) return
     setStore(s => ({
       ...s,
       instances: s.instances.filter(i => i.id !== id),
       activeId: s.activeId === id ? null : s.activeId,
       reportId: s.reportId === id ? null : s.reportId,
     }))
+  }
 
   const updateActiveData = (updater: (d: EvalContextoData) => EvalContextoData) =>
     setStore(s => ({

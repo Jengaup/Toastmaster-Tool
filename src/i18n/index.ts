@@ -256,6 +256,9 @@ const translations = {
     timerPaused: 'PAUSADO',
     timerConfirmReset: '¿Reiniciar?',
     timerShortcutHint: '⎵ Iniciar / Pausar   ·   R Reiniciar   ·   S Guardar   ·   F Pantalla completa',
+    timerSoundOn: 'Sonido activado — beeps en verde, amarillo y rojo',
+    timerSoundOff: 'Sonido desactivado',
+    confirmDelete: '¿Eliminar? Esta acción no se puede deshacer.',
 
     // New session
     newSession: 'Nueva sesión',
@@ -614,6 +617,9 @@ const translations = {
     timerPaused: 'PAUSED',
     timerConfirmReset: 'Reset?',
     timerShortcutHint: '⎵ Start / Pause   ·   R Reset   ·   S Save   ·   F Fullscreen',
+    timerSoundOn: 'Sound on — beeps at green, yellow and red',
+    timerSoundOff: 'Sound off',
+    confirmDelete: 'Delete? This action cannot be undone.',
 
     // New session
     newSession: 'New session',

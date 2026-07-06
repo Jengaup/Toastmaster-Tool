@@ -50,6 +50,7 @@ export default function Gramatical() {
   }
 
   const handleDelete = (id: string) => {
+    if (!window.confirm(t('confirmDelete'))) return
     setData((prev) => ({ ...prev, observaciones: prev.observaciones.filter((o) => o.id !== id) }))
     if (editId === id) setEditId(null)
   }

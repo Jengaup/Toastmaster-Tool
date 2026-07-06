@@ -179,6 +179,7 @@ export default function EvaluacionDiscurso() {
   }
 
   const deleteInstance = (id: string) => {
+    if (!window.confirm(t('confirmDelete'))) return
     setStore(s => ({
       ...s,
       instances: s.instances.filter(i => i.id !== id),

@@ -33,7 +33,10 @@ export default function AhCounter() {
     setNameInput('')
   }
 
-  const removeParticipant = (id: string) => setParticipants((prev) => prev.filter((p) => p.id !== id))
+  const removeParticipant = (id: string) => {
+    if (!window.confirm(t('confirmDelete'))) return
+    setParticipants((prev) => prev.filter((p) => p.id !== id))
+  }
 
   const addWord = () => {
     const w = wordInput.trim()

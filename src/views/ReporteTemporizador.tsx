@@ -6,6 +6,7 @@ import { TimerRecord, SPEECH_PRESETS, SpeechType, TimerConfig } from '../types'
 import { formatTime, parseTimeInput, secondsToInput } from '../utils/formatTime'
 import { exportTimerCSV, timerRecordsSummary, copyToClipboard } from '../utils/export'
 import { STORAGE_KEYS } from '../utils/storage'
+import { speechTypeKey } from '../utils/speechType'
 import { getPhase, getPhaseColor } from '../hooks/useTimer'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
@@ -32,13 +33,8 @@ const DEFAULT_TIMER_CONFIG: Record<SpeechType, TimerConfig> = {
   personalizado:  SPEECH_PRESETS.personalizado,
 }
 
-function speechTypeKey(tipoLabel: string): SpeechType | null {
-  const entry = Object.entries(SPEECH_PRESETS).find(([, p]) => p.label === tipoLabel)
-  return entry ? (entry[0] as SpeechType) : null
-}
-
 export default function ReporteTemporizador() {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const [records, setRecords] = useLocalStorage<TimerRecord[]>(STORAGE_KEYS.TIMER_RECORDS, [])
   const [timerConfig] = useLocalStorage<Record<SpeechType, TimerConfig>>(STORAGE_KEYS.TIMER_CONFIG, DEFAULT_TIMER_CONFIG)
   const [form, setForm] = useState({ nombre: '', tipo: SPEECH_PRESETS.preparado.label, tiempoFinal: '', notas: '' })
@@ -46,7 +42,7 @@ export default function ReporteTemporizador() {
   const [copied, setCopied] = useState(false)
 
   const getTimeColor = (r: TimerRecord): string => {
-    const key = speechTypeKey(r.tipo)
+    const key = speechTypeKey(r)
     if (!key) return '#94a3b8'
     const cfg = timerConfig[key] ?? SPEECH_PRESETS[key]
     return getPhaseColor(getPhase(r.tiempoFinal, cfg))
@@ -60,15 +56,17 @@ export default function ReporteTemporizador() {
       id: newId(),
       nombre: form.nombre.trim(),
       tipo: form.tipo,
+      tipoKey: speechTypeKey({ tipo: form.tipo }) ?? undefined,
       tiempoFinal: parseTimeInput(form.tiempoFinal),
       notas: form.notas.trim(),
-      fecha: new Date().toLocaleDateString('es-ES'),
+      fecha: new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US'),
     }
     setRecords((prev) => [...prev, record])
     setForm({ nombre: '', tipo: SPEECH_PRESETS.preparado.label, tiempoFinal: '', notas: '' })
   }
 
   const handleDelete = (id: string) => {
+    if (!window.confirm(t('confirmDelete'))) return
     setRecords((prev) => prev.filter((r) => r.id !== id))
     if (editId === id) setEditId(null)
   }
@@ -83,7 +81,7 @@ export default function ReporteTemporizador() {
     setRecords((prev) =>
       prev.map((r) =>
         r.id === editId
-          ? { ...r, nombre: form.nombre, tipo: form.tipo, tiempoFinal: parseTimeInput(form.tiempoFinal), notas: form.notas }
+          ? { ...r, nombre: form.nombre, tipo: form.tipo, tipoKey: speechTypeKey({ tipo: form.tipo }) ?? undefined, tiempoFinal: parseTimeInput(form.tiempoFinal), notas: form.notas }
           : r
       )
     )

@@ -19,6 +19,7 @@ export interface TimerRecord {
   id: string
   nombre: string
   tipo: string
+  tipoKey?: SpeechType
   tiempoFinal: number
   notas: string
   fecha: string

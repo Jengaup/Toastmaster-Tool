@@ -280,7 +280,7 @@ export default function EvaluadorGeneral() {
                     onChange={(e) => updateNota(seg.id, e.target.value)}
                     placeholder={t('evalNotesPlaceholder')}
                     rows={3}
-                    className="w-full text-sm text-slate-700 placeholder-slate-300 border-0 resize-none focus:outline-none focus:ring-0 leading-relaxed"
+                    className="w-full text-sm text-slate-700 placeholder-slate-300 border-0 resize-none focus:outline-none focus:ring-1 focus:ring-indigo-300 rounded-lg leading-relaxed"
                   />
                 </div>
               </div>
