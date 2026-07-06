@@ -13,7 +13,7 @@ function getCtx(): AudioContext | null {
 }
 
 export function soundEnabled(): boolean {
-  return storageGet(STORAGE_KEYS.SOUND_ENABLED, false)
+  return storageGet(STORAGE_KEYS.SOUND_ENABLED, true)
 }
 
 export function setSoundEnabled(on: boolean): void {
