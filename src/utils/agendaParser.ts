@@ -94,7 +94,17 @@ function shortLabel(raw: string, max = 48): string {
 }
 
 export function parseAgenda(text: string): ParsedAgenda {
-  const lines = text.split('\n').map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean)
+  const raw = text.split('\n').map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean)
+
+  // En estas agendas la HORA usa punto (7.15) o lleva AM/PM, y suele venir en
+  // su propia línea o al inicio de la fila. Las DURACIONES usan dos puntos sin
+  // AM/PM (1:00, 5:00). Quitamos las horas para que el contenido quede limpio.
+  const isBareHora = (l: string) =>
+    /^\d{1,2}\.\d{2}\s*(?:PM|AM)?$/i.test(l) || /^\d{1,2}:\d{2}\s*(?:AM|PM)$/i.test(l)
+  const stripLeadHora = (l: string) =>
+    l.replace(/^\d{1,2}\.\d{2}\s+/, '').replace(/^\d{1,2}:\d{2}\s*(?:AM|PM)\s+/i, '').trim()
+
+  const lines = raw.filter(l => !isBareHora(l)).map(stripLeadHora).filter(Boolean)
 
   const roles: Partial<Record<keyof MeetingRoles, string>> = {}
   const setRole = (key: keyof MeetingRoles, name: string) => {
@@ -128,31 +138,24 @@ export function parseAgenda(text: string): ParsedAgenda {
     if (key) setRole(key, m[2])
   }
 
-  // ── Roles y segmentos desde las filas de la tabla ─────────────────────────
-  // Fila típica: "7.16 Presidente Bernardita López Inicia reunión ... 7:00"
-  const rowRe = new RegExp(`^(\\d{1,2})[.:](\\d{2})\\s*(?:PM|AM)?\\s+(.*)$`, 'i')
+  // ── Roles y segmentos desde las líneas de actividad ───────────────────────
   const speakers: ParsedSpeaker[] = []
   const segments: ParsedSegment[] = []
 
-  for (const l of lines) {
-    const m = l.match(rowRe)
-    if (!m) continue
-    let rest = m[3]
-
-    // Extraer los tiempos finales (verde/amarillo/rojo o duración única)
+  for (const line of lines) {
+    // Separar las duraciones (dos puntos) del texto de la actividad
     const times: number[] = []
-    rest = rest.replace(/\b(\d{1,3}:\d{2})\b/g, (_g, t) => { times.push(parseTimeToSecs(t)); return '' }).trim()
+    const rest = line
+      .replace(/\b(\d{1,3}:\d{2})\b/g, (_g, t) => { times.push(parseTimeToSecs(t)); return '' })
+      .replace(/\s+/g, ' ').trim()
 
-    // Detectar la etiqueta de rol anclada al INICIO de la fila y tomar el
-    // nombre justo después (evita que un cuantificador perezoso parta "Sargento
-    // de Armas" en "Sargento de" + "Armas ...").
     const nameAfter = (from: number): string => {
-      const m = rest.slice(from).match(new RegExp(`^\\s*(${NAME_RE})`))
-      return m ? cleanName(m[1]) : ''
+      const mm = rest.slice(from).match(new RegExp(`^\\s*[-–:]?\\s*(${NAME_RE})`))
+      return mm ? cleanName(mm[1]) : ''
     }
 
     // ¿Orador N? → candidato a discurso preparado
-    const orM = rest.match(/^orador(?:a)?\s*(\d+)?/i)
+    const orM = rest.match(/^orador(?:a)?\s*(\d+)?\b/i)
     if (orM) {
       const nombre = nameAfter(orM[0].length)
       if (nombre) speakers.push({
@@ -160,6 +163,7 @@ export function parseAgenda(text: string): ParsedAgenda {
         nombre, titulo: '', ruta: '', nivel: '', proyecto: '', evaluador: '',
       })
     } else {
+      // Etiqueta de rol anclada al inicio de la línea
       for (const { key, re } of ROLE_PATTERNS) {
         const m = re.exec(rest)
         if (m && m.index <= 2) {
@@ -170,7 +174,7 @@ export function parseAgenda(text: string): ParsedAgenda {
       }
     }
 
-    // Segmento: usar la mayor duración de la fila como objetivo
+    // Segmento: usar la mayor duración de la línea como objetivo
     if (times.length) {
       const target = Math.max(...times)
       const label = shortLabel(rest)
@@ -191,24 +195,29 @@ export function parseAgenda(text: string): ParsedAgenda {
     return created
   }
 
-  let lastParen = ''
   for (let i = 0; i < lines.length; i++) {
-    const pm = lines[i].match(/\(([A-ZÁÉÍÓÚÑ][^)]{2,40})\)/)
-    if (pm) lastParen = cleanName(pm[1])
+    if (!/ruta\s*:/i.test(lines[i])) continue
 
-    if (/ruta\s*:/i.test(lines[i]) && lastParen) {
-      const sp = findOrCreate(lastParen)
-      const window = lines.slice(i, i + 6).join('\n')
-      const rutaM = window.match(/ruta\s*:\s*([^\n]+)/i)
-      const nivelM = window.match(/nivel\s*(\d+)/i)
-      const proyM = window.match(/proyecto\s*:\s*([^\n]+)/i)
-      const titM = window.match(/t[ií]tulo\s*:\s*([^\n]+)/i)
-      if (rutaM) sp.ruta = cleanText(rutaM[1])
-      if (nivelM) sp.nivel = nivelM[1]
-      if (proyM) sp.proyecto = cleanText(proyM[1])
-      if (titM) sp.titulo = cleanText(titM[1])
-      lastParen = ''
+    // El nombre del orador es el "(Nombre)" más cercano (línea anterior o
+    // siguientes); la propia línea "Ruta:" suele traer el nombre del evaluador.
+    let nombre = ''
+    for (let j = Math.max(0, i - 1); j <= i + 3 && j < lines.length; j++) {
+      const pm = lines[j].match(/\(([A-ZÁÉÍÓÚÑ][^)]{2,40})\)/)
+      if (pm) { nombre = cleanName(pm[1]); break }
     }
+    if (!nombre) continue
+
+    const sp = findOrCreate(nombre)
+    const window = lines.slice(i, i + 6).join('\n')
+    const rutaM = window.match(/ruta\s*:\s*([^\n]+)/i)
+    const nivelM = window.match(/nivel\s*(\d+)/i)
+    const proyM = window.match(/proyecto\s*:\s*([^\n]+)/i)
+    const titM = window.match(/t[ií]tulo\s*:\s*([^\n]+)/i)
+    // Ruta/Proyecto pueden traer una duración residual o el nombre del evaluador; limpiar.
+    if (rutaM) sp.ruta = cleanText(rutaM[1].replace(/\b\d{1,3}:\d{2}\b/g, ''))
+    if (nivelM) sp.nivel = nivelM[1]
+    if (proyM) sp.proyecto = cleanText(proyM[1])
+    if (titM) sp.titulo = cleanText(titM[1])
   }
 
   // ── Evaluador de cada orador: "Evalúa Discurso ofrecido por: <orador>" ────
