@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Timer, ClipboardList, MessageSquare, BookOpen, Star, Settings, X, Printer, Lock, Trash2, RotateCcw, FileCheck2, GraduationCap, Users } from 'lucide-react'
+import { Timer, ClipboardList, MessageSquare, BookOpen, Star, Settings, X, Printer, Lock, Trash2, RotateCcw, FileCheck2, GraduationCap, Users, Upload } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { TKey } from '../i18n'
 import { hasPinEnabled, savePin, removePin, lockApp } from '../utils/pin'
@@ -14,6 +14,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
+  { path: '/importar',      labelKey: 'navImport',      icon: <Upload size={18} />,        group: 'meeting'  },
   { path: '/temporizador',  labelKey: 'navTimer',       icon: <Timer size={18} />,         group: 'meeting'  },
   { path: '/reporte',       labelKey: 'navReport',      icon: <ClipboardList size={18} />, group: 'meeting'  },
   { path: '/ah-counter',    labelKey: 'navAhCounter',   icon: <MessageSquare size={18} />, group: 'meeting'  },
