@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { LanguageProvider } from './contexts/LanguageContext'
 import { MeetingClockProvider } from './contexts/MeetingClockContext'
@@ -16,6 +16,8 @@ import ImprimirReporte from './views/ImprimirReporte'
 import EvaluacionesContexto from './views/EvaluacionesContexto'
 import EvaluacionDiscurso from './views/EvaluacionDiscurso'
 import Roles from './views/Roles'
+// pdfjs es pesado: se carga solo al abrir el importador
+const ImportarAgenda = lazy(() => import('./views/ImportarAgenda'))
 
 function NotFound() {
   const { t } = useLanguage()
@@ -51,6 +53,7 @@ function AppInner() {
           <Route path="/eval-discurso" element={<EvaluacionDiscurso />} />
           <Route path="/imprimir" element={<ImprimirReporte />} />
           <Route path="/roles" element={<Roles />} />
+          <Route path="/importar" element={<Suspense fallback={<div className="p-8 text-sm text-slate-400">…</div>}><ImportarAgenda /></Suspense>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Layout>

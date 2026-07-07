@@ -58,6 +58,7 @@ interface MeetingClockCtx {
   deleteSegment: (id: string) => void
   resetAll: () => void
   loadStandardAgenda: () => void
+  importSegments: (segs: { label: string; targetSecs?: number }[]) => void
 }
 
 const MeetingClockContext = createContext<MeetingClockCtx>(null!)
@@ -132,6 +133,16 @@ export function MeetingClockProvider({ children }: { children: ReactNode }) {
 
   const loadStandardAgenda = () => saveSegments(STANDARD_TM_SEGMENTS.map(s => ({ ...s })))
 
+  const importSegments = (segs: { label: string; targetSecs?: number }[]) => {
+    saveSegments(segs.map((s, i) => ({
+      id: 'seg_' + Date.now().toString(36) + '_' + i,
+      label: s.label,
+      startedAt: null,
+      accumulated: 0,
+      ...(s.targetSecs ? { targetSecs: s.targetSecs } : {}),
+    })))
+  }
+
   const resetAll = () => {
     saveClock(DEFAULT_CLOCK)
     saveSegments(DEFAULT_SEGMENTS)
@@ -142,7 +153,7 @@ export function MeetingClockProvider({ children }: { children: ReactNode }) {
       clock, segments, clockElapsedMs, totalMs, remainingMs,
       isRunning, isOver,
       startMeeting, pauseMeeting, resetMeeting, setDuration,
-      segmentElapsedMs, toggleSegment, resetSegment, setSegmentTarget, addSegment, deleteSegment, resetAll, loadStandardAgenda,
+      segmentElapsedMs, toggleSegment, resetSegment, setSegmentTarget, addSegment, deleteSegment, resetAll, loadStandardAgenda, importSegments,
     }}>
       {children}
     </MeetingClockContext.Provider>
