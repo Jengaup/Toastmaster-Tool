@@ -73,6 +73,14 @@
 }
 
 @media print {
+  /* Conservar los colores de fondo/texto al imprimir (los navegadores los
+     descartan por defecto, dejando en blanco lo que la persona marcó, p.ej.
+     los círculos de la escala de Variedad Vocal). */
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   /* Hide everything except the evaluation form */
   nav, aside, header, footer,
   [data-sidebar], .no-print {
