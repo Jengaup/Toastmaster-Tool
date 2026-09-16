@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Trash2, RotateCcw, X, Download, Copy, Check, MessageSquare } from 'lucide-react'
+import { Plus, Trash2, RotateCcw, X, Download, Copy, Check, MessageSquare, Search } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useLanguage } from '../contexts/LanguageContext'
 import { AhParticipant } from '../types'
@@ -26,6 +26,12 @@ export default function AhCounter() {
   const [nameInput, setNameInput] = useState('')
   const [wordInput, setWordInput] = useState('')
   const [copied, setCopied] = useState(false)
+  const [search, setSearch] = useState('')
+
+  const query = search.trim().toLowerCase()
+  const filteredParticipants = query
+    ? participants.filter((p) => p.nombre.toLowerCase().includes(query))
+    : participants
 
   const addParticipant = () => {
     if (!nameInput.trim()) return
@@ -168,7 +174,34 @@ export default function AhCounter() {
         </div>
       ) : (
         <div className="space-y-4">
-          {participants.map((p) => (
+          {/* Quick search by name */}
+          {participants.length > 1 && (
+            <div className="relative">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input
+                className="w-full border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"
+                placeholder={t('ahSearchPlaceholder')}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  title={t('clear')}
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          )}
+
+          {filteredParticipants.length === 0 ? (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-10 text-center">
+              <Search size={20} className="text-slate-300 mx-auto mb-2" />
+              <p className="text-sm text-slate-500">{t('ahSearchNoResults')} "<span className="font-semibold text-slate-700">{search}</span>"</p>
+            </div>
+          ) : filteredParticipants.map((p) => (
             <div key={p.id} className="bg-white rounded-xl border border-slate-200 border-l-4 border-l-orange-400 shadow-sm overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
                 <div className="flex items-center gap-3">
