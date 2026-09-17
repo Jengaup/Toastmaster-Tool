@@ -428,10 +428,14 @@ export default function ImprimirReporte() {
                               <td className="py-1 pr-4 text-slate-500 font-medium capitalize">{key.replace(/_/g, ' ')}</td>
                               {[1,2,3,4,5].map(n => (
                                 <td key={n} className="text-center py-1 px-1">
-                                  <span className={`inline-block w-5 h-5 rounded-full text-xs font-bold leading-5 ${
+                                  <span className={`inline-block w-5 h-5 rounded-full text-xs font-bold leading-5 border ${
                                     val === n
-                                      ? n <= 2 ? 'bg-red-500 text-white' : n === 3 ? 'bg-amber-500 text-white' : 'bg-green-600 text-white'
-                                      : 'bg-slate-100 text-slate-300'
+                                      ? n <= 2
+                                        ? 'bg-red-500 text-white border-red-500 print:bg-white print:text-red-600 print:border-2'
+                                        : n === 3
+                                          ? 'bg-amber-500 text-white border-amber-500 print:bg-white print:text-amber-600 print:border-2'
+                                          : 'bg-green-600 text-white border-green-600 print:bg-white print:text-green-700 print:border-2'
+                                      : 'bg-slate-100 text-slate-300 border-transparent print:bg-white print:text-slate-300 print:border-slate-200'
                                   }`}>{n}</span>
                                 </td>
                               ))}

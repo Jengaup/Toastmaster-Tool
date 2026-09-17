@@ -384,7 +384,7 @@ export default function Temporizador() {
                         value={target > 0 ? Math.round(target / 60) : ''}
                         onChange={e => setSegmentTarget(seg.id, (parseInt(e.target.value) || 0) * 60)}
                         placeholder="–"
-                        className="w-9 text-center text-xs font-mono border border-slate-200 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-indigo-300 text-slate-500 placeholder-slate-300"
+                        className="w-16 text-center text-sm font-mono border border-slate-200 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-indigo-300 text-slate-500 placeholder-slate-300"
                       />
                       <span className="text-xs text-slate-300">m</span>
                     </div>
