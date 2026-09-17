@@ -21,4 +21,19 @@ if (window.self !== window.top) {
       <App />
     </React.StrictMode>
   )
+
+  // ── Auto-recarga al publicar una versión nueva ────────────────────────────
+  // El Service Worker (PWA) sirve la copia cacheada. Cuando se despliega una
+  // versión nueva, el SW se activa (skipWaiting/clientsClaim) y toma el control;
+  // recargamos una sola vez para que el usuario vea el cambio sin tener que
+  // limpiar caché. La guarda evita recargar en la primera instalación.
+  if ('serviceWorker' in navigator) {
+    const hadController = !!navigator.serviceWorker.controller
+    let reloaded = false
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || reloaded) return
+      reloaded = true
+      window.location.reload()
+    })
+  }
 }
